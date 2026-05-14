@@ -4,6 +4,7 @@ import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.ranking.repository.RankingSeasonRepository;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.repository.StockRepository;
@@ -61,6 +62,9 @@ class TradeSellProcessorConcurrencyTest {
     @Autowired
     private RealTimeStockPriceStore stockPriceStore;
 
+    @Autowired
+    private RankingSeasonRepository rankingSeasonRepository;
+
     private Long userId;
     private Long stockId;
     private final Long INITIAL_QUANTITY = 100L;
@@ -106,6 +110,7 @@ class TradeSellProcessorConcurrencyTest {
         tradeRepository.deleteAll();
         userStockRepository.deleteAll();
         userAccountRepository.deleteAll();
+        rankingSeasonRepository.deleteAll();
         userRepository.deleteAll();
     }
 
