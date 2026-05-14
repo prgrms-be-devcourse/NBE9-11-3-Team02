@@ -61,7 +61,8 @@ class TradeSellProcessorTest {
     private void mockCommonDependencies(Stock stock, UserStock userStock, UserAccount account) {
         given(stockRepository.findById(any())).willReturn(Optional.of(stock));
         given(userStockRepository.findByUsersIdAndStockId(any(), any())).willReturn(Optional.of(userStock));
-        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
+        //given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
+        //given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
     }
 
     // t1: 부분 매도 성공
@@ -77,6 +78,8 @@ class TradeSellProcessorTest {
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
         TradeSellRes res = tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 10L, 50000L));
 
@@ -97,6 +100,8 @@ class TradeSellProcessorTest {
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
         tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 20L, 50000L));
 
