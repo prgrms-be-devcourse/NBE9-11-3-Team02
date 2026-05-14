@@ -1,6 +1,6 @@
 spring:
   application:
-    name: together-02-be
+    name: together-03-be
 
   profiles:
     active: prod
