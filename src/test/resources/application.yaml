@@ -1,0 +1,23 @@
+spring:
+  profiles:
+    active: dev
+    include: secret, local
+  jpa:
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        use_sql_comments: false
+        highlight_sql: false
+
+jwt:
+  access-expire-seconds: 900
+  refresh-expire-seconds: 604800
+  secret: test-secret-key-for-testing-purposes-only
+
+logging:
+  level:
+    org.hibernate.SQL: OFF
+    org.hibernate.orm.jdbc.bind: OFF
+    org.hibernate.orm.jdbc.extract: OFF
+    org.springframework.transaction.interceptor: OFF

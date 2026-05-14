@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:db_dev;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true # H2 콘솔 활성화
+  jpa:
+    hibernate:
+      ddl-auto: create-drop # 앱 종료 시 데이터 삭제
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+    show_sql: true

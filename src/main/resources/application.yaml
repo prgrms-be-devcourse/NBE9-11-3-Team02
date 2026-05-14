@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: together-02-be
+
+  profiles:
+    active: prod
+    include: secret, local
+
+  cache:
+    type: caffeine
+    cache-names: chart
+    caffeine:
+      spec: maximumSize=60,expireAfterWrite=24h # 모의투자 종목 20개 × 기간 2개(3M, 1Y) = 최대 40개 넉넉히 60개
+
+  output:
+    ansi:
+      enabled: always
+
+  jpa:
+    defer-datasource-initialization: true
+
+jwt:
+  access-expire-seconds: 900
+  refresh-expire-seconds: 604800
+  secret: ${JWT_SECRET:default-secret}
+
+springdoc:
+  default-produces-media-type: application/json; charset=UTF-8
+
+logging:
+  level:
+    org.hibernate.orm.jdbc.bind: INFO
+    org.hibernate.orm.jdbc.extract: INFO
+    org.springframework.transaction.interceptor: INFO
