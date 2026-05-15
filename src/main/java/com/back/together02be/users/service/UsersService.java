@@ -43,19 +43,19 @@ public class UsersService {
     @Transactional
     public void signup(SignupReq req) {
 
-        if (usersRepository.findByUsername(req.username()).isPresent()) {
+        if (usersRepository.findByUsername(req.getUsername()).isPresent()) {
             throw new IllegalArgumentException("이미 사용중인 아이디입니다.");
         }
 
-        if (!req.password().equals(req.passwordConfirm())) {
+        if (!req.getPassword().equals(req.getPasswordConfirm())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
         // db에 [회원가입 한 user] 저장
         Users user = new Users(
-                req.username(),
-                passwordEncoder.encode(req.password()),
-                req.nickname()
+                req.getUsername(),
+                passwordEncoder.encode(req.getPassword()),
+                req.getNickname()
         );
 
         usersRepository.save(user);
@@ -71,12 +71,12 @@ public class UsersService {
     public String[] login(LoginReq req) {
 
         Users user = usersRepository
-                .findByUsername(req.username())
+                .findByUsername(req.getUsername())
                 .orElseThrow(
                         () -> new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.")
                 );
 
-        if (!passwordEncoder.matches(req.password(), user.getPassword())) {
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
             throw new IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.");
         }
 

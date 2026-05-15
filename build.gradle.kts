@@ -2,6 +2,9 @@ plugins {
     java
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+    kotlin("jvm") version "2.2.21"
+    kotlin("plugin.spring") version "2.2.21"
+    kotlin("plugin.jpa") version "2.2.21"
 }
 
 group = "com.back"
@@ -45,6 +48,7 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     implementation ("org.springframework.boot:spring-boot-starter-cache")
     implementation ("com.github.ben-manes.caffeine:caffeine")
+    implementation("org.jetbrains.kotlin:kotlin-reflect")
 }
 
 tasks.withType<Test> {
