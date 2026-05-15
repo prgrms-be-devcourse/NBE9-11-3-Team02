@@ -1,34 +1,26 @@
 package com.back.together02be.stock.controller;
 
 import static org.mockito.Mockito.*;
-		import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-		import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import com.back.together02be.stock.dto.response.StockListRes;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.back.together02be.stock.dto.response.StockPriceRes;
-import com.back.together02be.stock.service.StockService;
-
-import jakarta.persistence.EntityNotFoundException;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.List;
 
-@SpringBootTest
-@AutoConfigureMockMvc
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.back.together02be.stock.dto.response.StockListRes;
+import com.back.together02be.stock.dto.response.StockPriceRes;
+import com.back.together02be.stock.service.StockService;
+import com.back.together02be.support.ControllerTestSupport;
+
+import jakarta.persistence.EntityNotFoundException;
+
 @DisplayName("StockController 통합 테스트")
-class StockControllerTest {
+class StockControllerTest extends ControllerTestSupport {
 
-	@Autowired
-	private MockMvc mockMvc;
-
-	@MockitoBean                        // @MockBean 아니고 @MockitoBean
+	@MockitoBean
 	private StockService stockService;
 
 	private static final String STOCK_URI  = "/api/stocks/{stockCode}";

@@ -1,37 +1,30 @@
 package com.back.together02be.global.security;
 
-import com.back.together02be.global.util.JwtUtil;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.util.Map;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-@SpringBootTest(properties = {
-        "jwt.secret=test-secret-key-must-be-32-bytes!!"
+import com.back.together02be.global.util.JwtUtil;
+import com.back.together02be.support.ControllerTestSupport;
+
+@TestPropertySource(properties = {
+    "jwt.secret=test-secret-key-must-be-32-bytes!!"
 })
-@AutoConfigureMockMvc
 @Import(SecurityIntegrationTest.TestProtectedController.class)
-class SecurityIntegrationTest {
+class SecurityIntegrationTest extends ControllerTestSupport {
 
     private static final String SECRET = "test-secret-key-must-be-32-bytes!!";
-
-    @Autowired
-    MockMvc mockMvc;
 
     @Test
     @DisplayName("permitAll API - token 없이 Security 차단 X")
