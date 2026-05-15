@@ -57,7 +57,7 @@ class UsersService (
     }
 
     @Transactional
-    fun login(req: LoginReq): Array<String?> {
+    fun login(req: LoginReq): Array<String> {
         val user = usersRepository
             .findByUsername(req.username)
             .orElseThrow<IllegalArgumentException?>(
@@ -95,7 +95,7 @@ class UsersService (
     }
 
     @Transactional
-    fun reissueToken(refreshToken: String): Array<String?> {
+    fun reissueToken(refreshToken: String): Array<String> {
         val user = usersRepository
             .findByRefreshToken(refreshToken)
             .orElseThrow<IllegalArgumentException?>(

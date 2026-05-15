@@ -7,5 +7,5 @@ import java.util.*
 interface UsersRepository : JpaRepository<Users, Long> {
     fun findByUsername(username: String): Optional<Users>
     fun findByRefreshToken(refreshToken: String): Optional<Users>
-    fun existsByUsername(username: String?): Boolean
+    fun existsByUsername(username: String): Boolean
 }

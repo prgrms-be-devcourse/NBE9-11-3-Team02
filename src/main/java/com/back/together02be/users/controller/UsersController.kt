@@ -10,12 +10,10 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import lombok.RequiredArgsConstructor
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/users")
 @Tag(name = "UsersController", description = "유저 API")
 class UsersController(
@@ -41,7 +39,7 @@ class UsersController(
         val tokens = usersService.login(req)
         addRefreshTokenCookie(response, tokens[1])
         return ResponseEntity.ok(
-            ApiRes<UsersRes>("로그인 성공", UsersRes(tokens[0]!!))
+            ApiRes<UsersRes>("로그인 성공", UsersRes(tokens[0]))
         )
     }
 
@@ -54,7 +52,7 @@ class UsersController(
         val tokens = usersService.reissueToken(refreshToken)
         addRefreshTokenCookie(response, tokens[1])
         return ResponseEntity.ok(
-            ApiRes<UsersRes>("토큰 재발급 성공", UsersRes(tokens[0]!!))
+            ApiRes<UsersRes>("토큰 재발급 성공", UsersRes(tokens[0]))
         )
     }
 
