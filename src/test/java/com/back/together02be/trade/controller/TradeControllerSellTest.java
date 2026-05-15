@@ -1,4 +1,4 @@
-package com.back.together02be.trade;
+package com.back.together02be.trade.controller;
 
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
@@ -7,7 +7,6 @@ import com.back.together02be.asset.repository.UserStockRepository;
 import com.back.together02be.global.util.JwtUtil;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.trade.controller.TradeController;
 import com.back.together02be.trade.util.MarketTimeValidator;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.*;
@@ -17,9 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
