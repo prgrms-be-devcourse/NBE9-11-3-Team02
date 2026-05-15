@@ -22,7 +22,7 @@ class UsersController(
 
     @PostMapping("/signup")
     @Operation(summary = "회원 가입")
-    fun signup(@RequestBody @Valid req: @Valid SignupReq): ResponseEntity<ApiRes<Void>> {
+    fun signup(@RequestBody @Valid req: SignupReq): ResponseEntity<ApiRes<Void>> {
         usersService.signup(req)
         return ResponseEntity.ok(
             ApiRes<Void>("회원가입 성공", null)
@@ -33,7 +33,7 @@ class UsersController(
     @PostMapping("/login")
     @Operation(summary = "로그인")
     fun login(
-        @RequestBody @Valid req: @Valid LoginReq,
+        @RequestBody @Valid req: LoginReq,
         response: HttpServletResponse
     ): ResponseEntity<ApiRes<UsersRes>> {
         val tokens = usersService.login(req)
@@ -71,20 +71,20 @@ class UsersController(
 
     private fun addRefreshTokenCookie(response: HttpServletResponse, refreshToken: String?) {
         val cookie = Cookie("refreshToken", refreshToken)
-        cookie.setPath("/")
-        cookie.setHttpOnly(true)
-        cookie.setDomain("localhost")
-        cookie.setSecure(true)
+        cookie.path = "/"
+        cookie.isHttpOnly = true
+        cookie.domain = "localhost"
+        cookie.secure = true
         cookie.setAttribute("SameSite", "Strict")
         response.addCookie(cookie)
     }
 
     private fun deleteRefreshTokenCookie(response: HttpServletResponse) {
         val cookie = Cookie("refreshToken", "")
-        cookie.setPath("/")
-        cookie.setHttpOnly(true)
-        cookie.setDomain("localhost")
-        cookie.setMaxAge(0)
+        cookie.path = "/"
+        cookie.isHttpOnly = true
+        cookie.domain = "localhost"
+        cookie.maxAge = 0
         response.addCookie(cookie)
     }
 }
