@@ -1,24 +1,10 @@
 package com.back.together02be.trade.controller;
 
-import com.back.together02be.asset.entity.UserAccount;
-import com.back.together02be.asset.entity.UserStock;
-import com.back.together02be.asset.repository.UserAccountRepository;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.global.util.JwtUtil;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.trade.util.MarketTimeValidator;
-import jakarta.transaction.Transactional;
-import org.junit.jupiter.api.*;
-import org.mockito.MockedStatic;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,20 +12,31 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.mockStatic;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
 
-@SpringBootTest
-@ActiveProfiles("test")
-@AutoConfigureMockMvc
+import com.back.together02be.asset.entity.UserAccount;
+import com.back.together02be.asset.entity.UserStock;
+import com.back.together02be.asset.repository.UserAccountRepository;
+import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.global.util.JwtUtil;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.support.ControllerTestSupport;
+import com.back.together02be.trade.util.MarketTimeValidator;
+
+import jakarta.transaction.Transactional;
+
 @Transactional
-public class TradeControllerSellTest {
-
-    @Autowired
-    private MockMvc mvc;
+public class TradeControllerSellTest extends ControllerTestSupport {
 
     @Autowired
     private UserStockRepository userStockRepository;
@@ -127,7 +124,7 @@ public class TradeControllerSellTest {
     @DisplayName("매도 성공 - 부분 매도")
     void t1() throws Exception {
 
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -167,7 +164,7 @@ public class TradeControllerSellTest {
     @Test
     @DisplayName("매도 성공 - 전량 매도 시 UserStock 삭제")
     void t2() throws Exception {
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -217,7 +214,7 @@ public class TradeControllerSellTest {
                 .build();
         realtimeStockPriceService.put("005930", lossPrice);
 
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -254,7 +251,7 @@ public class TradeControllerSellTest {
     @Test
     @DisplayName("매도 실패 - 보유하지 않은 종목")
     void t4() throws Exception {
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -281,7 +278,7 @@ public class TradeControllerSellTest {
     @Test
     @DisplayName("매도 실패 - 보유 수량 초과")
     void t5() throws Exception {
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -315,7 +312,7 @@ public class TradeControllerSellTest {
     @Test
     @DisplayName("매도 실패 - quantity가 0 이하")
     void t6() throws Exception {
-        ResultActions result = mvc
+        ResultActions result = mockMvc
                 .perform(
                         post("/api/trades/sell")
                                 .contentType(MediaType.APPLICATION_JSON)

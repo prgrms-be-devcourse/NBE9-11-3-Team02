@@ -1,14 +1,14 @@
 package com.back.together02be.achievement;
 
-import com.back.together02be.achievement.event.TradeCompletedEvent;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEventPublisher;
 
-@SpringBootTest
-public class AchievementTest {
+import com.back.together02be.achievement.event.TradeCompletedEvent;
+import com.back.together02be.support.IntegrationTestSupport;
+
+public class AchievementTest extends IntegrationTestSupport {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
