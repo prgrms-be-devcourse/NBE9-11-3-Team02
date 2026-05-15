@@ -64,7 +64,7 @@ class UsersController(
         @CookieValue(name = "refreshToken") refreshToken: String,
         response: HttpServletResponse
     ): ResponseEntity<ApiRes<Void>> {
-        usersService!!.logout(refreshToken)
+        usersService.logout(refreshToken)
         deleteRefreshTokenCookie(response)
         return ResponseEntity.ok(
             ApiRes<Void>("로그아웃 성공", null)

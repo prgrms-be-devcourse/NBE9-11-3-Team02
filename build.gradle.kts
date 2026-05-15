@@ -3,6 +3,8 @@ plugins {
     kotlin("plugin.spring") version "2.3.20" // Spring 쓰면 필수
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+    kotlin("plugin.jpa") version "2.3.20"
+    kotlin("plugin.lombok") version "2.3.20"
 }
 
 group = "com.back"
@@ -45,6 +47,7 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-cache")
     implementation ("com.github.ben-manes.caffeine:caffeine")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation(kotlin("stdlib"))
 }
 
 tasks.withType<Test> {

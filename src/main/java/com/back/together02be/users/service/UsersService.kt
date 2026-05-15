@@ -28,7 +28,7 @@ class UsersService (
 ) {
 
     @Value("\${jwt.secret}")
-    private val jwtSecret: String? = null
+    private lateinit var jwtSecret: String
 
     @Value("\${jwt.access-expire-seconds}")
     private val accessExpireSeconds: Long = 0
@@ -42,15 +42,20 @@ class UsersService (
 
         require(req.password == req.passwordConfirm) { "비밀번호가 일치하지 않습니다." }
 
-        // db에 [회원가입 한 user] 저장
+        // 비밀번호는 null이 아니라고 알려주기 위해서 명확히 알려주는 방식 사용
+        val encodedPassword = requireNotNull(passwordEncoder.encode(req.password)) {
+            "비밀번호 암호화에 실패했습니다."
+        }
+
         val user = Users(
             req.username,
-            passwordEncoder.encode(req.password),
+//            passwordEncoder.encode(req.password)!!
+            encodedPassword,
             req.nickname
         )
 
-        usersRepository.save<Users?>(user)
-        userAccountRepository.save<UserAccount?>(UserAccount(user, 0L, INITIAL_DEPOSIT))
+        usersRepository.save<Users>(user)
+        userAccountRepository.save<UserAccount>(UserAccount(user, 0L, INITIAL_DEPOSIT))
         rankingSeasonService.createSeasonForUser(user, LocalDate.now())
     }
 
@@ -76,13 +81,13 @@ class UsersService (
         )
 
         // RefreshToken 발급
-        val refreshToken: String? = UUID.randomUUID().toString()
+        val refreshToken: String = UUID.randomUUID().toString()
         user.updateRefreshToken(
             refreshToken,
             LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         )
 
-        return arrayOf<String?>(accessToken, refreshToken)
+        return arrayOf(accessToken, refreshToken)
     }
 
     @Transactional
@@ -104,8 +109,12 @@ class UsersService (
                 Supplier { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
             )
 
-        // 만료시간(10시) < 현재시간(11시)
-        require(!user.getRefreshTokenExpiration().isBefore(LocalDateTime.now())) { "리프레시 토큰이 만료되었습니다." }
+        val refreshTokenExpiration = user.refreshTokenExpiration
+            ?: throw IllegalArgumentException("리프레시 토큰이 만료되었습니다.")
+
+        require(!refreshTokenExpiration.isBefore(LocalDateTime.now())) {
+            "리프레시 토큰이 만료되었습니다."
+        }
 
         // AccessToken 갱신
         val newAccessToken = JwtUtil.generateAccessToken(
@@ -115,20 +124,20 @@ class UsersService (
         )
 
         // RefreshToken 갱신
-        val newRefreshToken: String? = UUID.randomUUID().toString()
+        val newRefreshToken: String = UUID.randomUUID().toString()
         user.updateRefreshToken(
             newRefreshToken,
             LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         )
 
-        return arrayOf<String?>(newAccessToken, newRefreshToken)
+        return arrayOf(newAccessToken, newRefreshToken)
     }
 
-    private fun createAccessTokenBody(user: Users): MutableMap<String, Any> {
-        return Map.of<String, Any>(
-            "id", user.id,
-            "username", user.username,
-            "nickname", user.nickname
+    private fun createAccessTokenBody(user: Users): Map<String, Any> {
+        return mapOf<String, Any>(
+            "id" to user.getId(),
+            "username" to user.username,
+            "nickname" to user.nickname
         )
     }
 
