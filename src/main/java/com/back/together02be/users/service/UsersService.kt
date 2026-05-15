@@ -8,7 +8,6 @@ import com.back.together02be.users.dto.request.LoginReq
 import com.back.together02be.users.dto.request.SignupReq
 import com.back.together02be.users.entity.Users
 import com.back.together02be.users.repository.UsersRepository
-import lombok.RequiredArgsConstructor
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -19,22 +18,16 @@ import java.util.*
 import java.util.function.Supplier
 
 @Service
-@RequiredArgsConstructor
 class UsersService (
     private val usersRepository: UsersRepository,
     private val userAccountRepository: UserAccountRepository,
     private val passwordEncoder: PasswordEncoder,
-    private val rankingSeasonService: RankingSeasonService
+    private val rankingSeasonService: RankingSeasonService,
+
+    @param:Value("\${jwt.secret}") private val jwtSecret: String,
+    @param:Value("\${jwt.access-expire-seconds}") private val accessExpireSeconds: Long,
+    @param:Value("\${jwt.refresh-expire-seconds}") private val refreshExpireSeconds: Long
 ) {
-
-    @Value("\${jwt.secret}")
-    private lateinit var jwtSecret: String
-
-    @Value("\${jwt.access-expire-seconds}")
-    private val accessExpireSeconds: Long = 0
-
-    @Value("\${jwt.refresh-expire-seconds}")
-    private val refreshExpireSeconds: Long = 0
 
     @Transactional
     fun signup(req: SignupReq) {
