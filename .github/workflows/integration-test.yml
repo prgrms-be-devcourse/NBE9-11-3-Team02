@@ -5,7 +5,16 @@ on:
 
 jobs:
   integration-test:
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
+
+    env:
+      MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+      MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+      MYSQL_USER: ${{ secrets.MYSQL_USER }}
+      MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      TEST_DB_USERNAME: ${{ secrets.MYSQL_USER }}
+      TEST_DB_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+      SPRING_PROFILES_ACTIVE: test
 
     steps:
       - name: Checkout repository
@@ -20,7 +29,6 @@ jobs:
       # 🛠️ [수정됨] 최상위 폴더에 있는 docker-compose.yaml을 바라보도록 경로 변경
       - name: Start Database with Docker Compose
         run: |
-          # 하이픈(-)을 빼고 띄어쓰기로 변경합니다.
           docker compose -f docker-compose.yaml up -d
           
           echo "Waiting for MySQL to be ready..."
@@ -40,5 +48,4 @@ jobs:
 
       - name: Stop Database
         if: always() 
-        # 여기도 하이픈(-)을 빼고 띄어쓰기로 변경합니다.
         run: docker compose -f docker-compose.yaml down
