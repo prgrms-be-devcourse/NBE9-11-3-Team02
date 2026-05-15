@@ -46,6 +46,14 @@ jobs:
       - name: Run Integration Tests
         run: ./gradlew test
 
+      - name: Test Report
+        uses: dorny/test-reporter@v1
+        if: always()
+        with:
+          name: Integration Test Results
+          path: '**/build/test-results/test/*.xml'
+          reporter: java-junit
+
       - name: Stop Database
         if: always() 
         run: docker compose -f docker-compose.yaml down
