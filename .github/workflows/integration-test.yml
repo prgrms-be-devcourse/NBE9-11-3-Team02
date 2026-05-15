@@ -1,0 +1,44 @@
+name: Integration Test Automation
+
+on:
+  push:
+
+jobs:
+  integration-test:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+
+      # 🛠️ [수정됨] 최상위 폴더에 있는 docker-compose.yaml을 바라보도록 경로 변경
+      - name: Start Database with Docker Compose
+        run: |
+          # 하이픈(-)을 빼고 띄어쓰기로 변경합니다.
+          docker compose -f docker-compose.yaml up -d
+          
+          echo "Waiting for MySQL to be ready..."
+          while ! nc -z localhost 3306; do
+            sleep 1
+          done
+          echo "MySQL is up and running!"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Run Integration Tests
+        run: ./gradlew test
+
+      - name: Stop Database
+        if: always() 
+        # 여기도 하이픈(-)을 빼고 띄어쓰기로 변경합니다.
+        run: docker compose -f docker-compose.yaml down
