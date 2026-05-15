@@ -113,13 +113,13 @@ public class KisTokenService {
                 .body(KisTokenRes.class);
 
         //응답이 비정상이면 예외 처리
-        if (tokenResponse == null || tokenResponse.accessToken() == null) {
+        if (tokenResponse == null || tokenResponse.getAccessToken() == null) {
             throw new IllegalStateException("토큰 발급 실패");
         }
 
         //만료 시각 계산
         LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(tokenResponse.expiresIn() == null ? 0 : tokenResponse.expiresIn());
+                .plusSeconds(tokenResponse.getExpiresIn() == null ? 0 : tokenResponse.getExpiresIn());
 
         //최근 토큰 레코드 조회
         KisAccessToken tokenEntity = kisAccessTokenRepository.findTopByOrderByIdDesc()
@@ -128,15 +128,15 @@ public class KisTokenService {
         //최근 토큰이 없으면 insert
         if (tokenEntity == null) {
             tokenEntity = new KisAccessToken(
-                    tokenResponse.accessToken(),
-                    tokenResponse.tokenType(),
+                    tokenResponse.getAccessToken(),
+                    tokenResponse.getTokenType(),
                     expiresAt
             );
         } else {
             //최근 토큰이 있으면 update
             tokenEntity.update(
-                    tokenResponse.accessToken(),
-                    tokenResponse.tokenType(),
+                    tokenResponse.getAccessToken(),
+                    tokenResponse.getTokenType(),
                     expiresAt
             );
         }

@@ -1,7 +1,13 @@
 plugins {
-    java
+    kotlin("jvm") version "2.3.20"           // 추가
+    kotlin("plugin.spring") version "2.3.20" // Spring 쓰면 필수
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+}
+
+// 기존 java 블록 제거하고 kotlin으로 통일
+kotlin {
+    jvmToolchain(25)
 }
 
 group = "com.back"

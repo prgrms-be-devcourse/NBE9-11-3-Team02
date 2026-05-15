@@ -53,7 +53,7 @@ public class KisPriceClient {
                 .retrieve()
                 .body(KisPriceRes.class);
 
-        if (response == null || response.output() == null) {
+        if (response == null || response.getOutput() == null) {
             throw new IllegalStateException("현재가 조회 실패: stockCode=" + stockCode);
         }
 
