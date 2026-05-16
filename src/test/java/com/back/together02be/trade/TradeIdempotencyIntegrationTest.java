@@ -116,8 +116,8 @@ class TradeIdempotencyIntegrationTest {
                     startLatch.await();
                     BuyRes res = tradeService.buy(user.getId(), idempotencyKey, request);
                     successCount.incrementAndGet();
-                    tradeIds.add(res.tradeId());
-                    System.out.printf("[스레드-%d] 응답 수신 — tradeId=%d%n", threadId, res.tradeId());
+                    tradeIds.add(res.getTradeId());
+                    System.out.printf("[스레드-%d] 응답 수신 — tradeId=%d%n", threadId, res.getTradeId());
                 } catch (Exception e) {
                     blockedCount.incrementAndGet();
                     System.out.printf("[스레드-%d] 처리 중 차단 — %s%n", threadId, e.getMessage());
@@ -159,7 +159,7 @@ class TradeIdempotencyIntegrationTest {
 
         // 1차 요청 — 정상 체결
         BuyRes first = tradeService.buy(user.getId(), idempotencyKey, request);
-        System.out.printf("[1차] 체결 완료 — tradeId=%d, 금액=%,d원%n", first.tradeId(), first.amount());
+        System.out.printf("[1차] 체결 완료 — tradeId=%d, 금액=%,d원%n", first.getTradeId(), first.getAmount());
 
         long countAfterFirst = tradeRepository.findAll().stream()
                 .filter(t -> t.getStock().getId().equals(stock.getId()))
@@ -168,7 +168,7 @@ class TradeIdempotencyIntegrationTest {
 
         // 2차 요청 — 네트워크 재전송 시뮬레이션
         BuyRes second = tradeService.buy(user.getId(), idempotencyKey, request);
-        System.out.printf("[2차] 캐시 응답 반환 — tradeId=%d (1차와 동일)%n", second.tradeId());
+        System.out.printf("[2차] 캐시 응답 반환 — tradeId=%d (1차와 동일)%n", second.getTradeId());
 
         long countAfterSecond = tradeRepository.findAll().stream()
                 .filter(t -> t.getStock().getId().equals(stock.getId()))
@@ -176,12 +176,12 @@ class TradeIdempotencyIntegrationTest {
 
         System.out.println("=".repeat(60));
         System.out.printf("[결과] 1차 tradeId=%d | 2차 tradeId=%d → %s%n",
-                first.tradeId(), second.tradeId(),
-                first.tradeId().equals(second.tradeId()) ? "동일 (캐시 응답)" : "다름 (버그!)");
+                first.getTradeId(), second.getTradeId(),
+                first.getTradeId() == second.getTradeId() ? "동일 (캐시 응답)" : "다름 (버그!)");
         System.out.printf("[결과] DB Trade: %d건 (기대값 1건 — 재전송으로 중복 체결 없음)%n", countAfterSecond);
         System.out.println("=".repeat(60));
 
-        assertThat(first.tradeId()).isEqualTo(second.tradeId());
+        assertThat(first.getTradeId()).isEqualTo(second.getTradeId());
         assertThat(countAfterSecond).isEqualTo(1);
     }
 }
