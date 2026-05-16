@@ -1,25 +1,8 @@
 package com.back.together02be.trade.processor;
 
-import com.back.together02be.asset.entity.UserAccount;
-import com.back.together02be.asset.entity.UserStock;
-import com.back.together02be.asset.repository.UserAccountRepository;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.ranking.repository.RankingSeasonRepository;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.stock.repository.StockRepository;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.trade.dto.request.TradeSellReq;
-import com.back.together02be.trade.repository.TradeRepository;
-import com.back.together02be.trade.util.MarketTimeValidator;
-import com.back.together02be.users.entity.Users;
-import com.back.together02be.users.repository.UsersRepository;
-import org.junit.jupiter.api.*;
-import org.mockito.MockedStatic;
-import org.mockito.ScopedMock;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.mockito.Mockito.*;
+import static org.springframework.transaction.annotation.Propagation.*;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -34,13 +17,32 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.mockito.Mockito.mockStatic;
-import static org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
+import com.back.together02be.asset.entity.UserAccount;
+import com.back.together02be.asset.entity.UserStock;
+import com.back.together02be.asset.repository.UserAccountRepository;
+import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.ranking.repository.RankingSeasonRepository;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.entity.Stock;
+import com.back.together02be.stock.repository.StockRepository;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.support.IntegrationTestSupport;
+import com.back.together02be.trade.dto.request.TradeSellReq;
+import com.back.together02be.trade.repository.TradeRepository;
+import com.back.together02be.trade.util.MarketTimeValidator;
+import com.back.together02be.users.entity.Users;
+import com.back.together02be.users.repository.UsersRepository;
+
 @Transactional(propagation = NOT_SUPPORTED) // 각 스레드가 독립적인 트랜잭션을 가지도록
-class TradeSellProcessorConcurrencyTest {
+class TradeSellProcessorConcurrencyTest extends IntegrationTestSupport {
 
     @Autowired
     private TradeSellProcessor tradeSellProcessor;
