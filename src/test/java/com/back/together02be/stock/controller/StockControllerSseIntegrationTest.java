@@ -8,38 +8,27 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import com.back.together02be.infra.kis.rest.KisPriceClient;
-import com.back.together02be.infra.kis.websocket.KisWebSocketClient;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.support.ControllerTestSupport;
 
-@SpringBootTest
-@AutoConfigureMockMvc
 @DisplayName("StockController - SSE 엔드포인트 통합 테스트")
-class StockControllerSseIntegrationTest {
+class StockControllerSseIntegrationTest extends ControllerTestSupport {
 
 	// Mock
-	@MockitoBean
-	private KisWebSocketClient kisWebSocketClient;
-
 	@MockitoBean
 	private KisPriceClient kisPriceClient;
 
 	// 테스트 픽스처
-	private static final String SSE_URI      = "/api/stocks/{stockCode}/sse";
-	private static final String VALID_CODE   = "005930";
+	private static final String SSE_URI = "/api/stocks/{stockCode}/sse";
+	private static final String VALID_CODE = "005930";
 	private static final String INVALID_CODE = "INVALID_99999";
-	private static final String ALL_SSE_URI  = "/api/stocks/sse";
-
-	@Autowired
-	private MockMvc mockMvc;
+	private static final String ALL_SSE_URI = "/api/stocks/sse";
 
 	@Autowired
 	private RealTimeStockPriceStore rtStockPriceStore;
@@ -80,10 +69,10 @@ class StockControllerSseIntegrationTest {
 	@DisplayName("전체 종목 SSE 연결 시 text/event-stream 으로 응답한다")
 	void 전체_종목_SSE_스트림_수신() throws Exception {
 		mockMvc.perform(get(ALL_SSE_URI)
-						.accept(MediaType.TEXT_EVENT_STREAM))
-				.andExpect(status().isOk())
-				.andExpect(header().string(
-						HttpHeaders.CONTENT_TYPE,
-						containsString("text/event-stream")));
+				.accept(MediaType.TEXT_EVENT_STREAM))
+			.andExpect(status().isOk())
+			.andExpect(header().string(
+				HttpHeaders.CONTENT_TYPE,
+				containsString("text/event-stream")));
 	}
 }

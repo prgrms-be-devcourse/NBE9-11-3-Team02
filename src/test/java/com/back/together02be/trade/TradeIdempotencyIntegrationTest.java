@@ -1,24 +1,8 @@
 package com.back.together02be.trade;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-import com.back.together02be.asset.entity.UserAccount;
-import com.back.together02be.asset.repository.UserAccountRepository;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.global.idempotency.IdempotencyKeyRepository;
-import com.back.together02be.achievement.listener.AchievementEventListener;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.stock.entity.StockMarket;
-import com.back.together02be.stock.repository.StockRepository;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.trade.dto.BuyReq;
-import com.back.together02be.trade.dto.BuyRes;
-import com.back.together02be.trade.repository.TradeRepository;
-import com.back.together02be.trade.service.TradeService;
-import com.back.together02be.users.entity.Users;
-import com.back.together02be.users.repository.UsersRepository;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -27,20 +11,37 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.back.together02be.achievement.listener.AchievementEventListener;
+import com.back.together02be.asset.entity.UserAccount;
+import com.back.together02be.asset.repository.UserAccountRepository;
+import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.global.idempotency.IdempotencyKeyRepository;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.entity.Stock;
+import com.back.together02be.stock.entity.StockMarket;
+import com.back.together02be.stock.repository.StockRepository;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.support.IntegrationTestSupport;
+import com.back.together02be.trade.dto.BuyReq;
+import com.back.together02be.trade.dto.BuyRes;
+import com.back.together02be.trade.repository.TradeRepository;
+import com.back.together02be.trade.service.TradeService;
+import com.back.together02be.users.entity.Users;
+import com.back.together02be.users.repository.UsersRepository;
 
 /**
  * 멱등성 키 통합 테스트 — 실제 DB를 사용해 네트워크 재전송 방어를 검증한다.
  * @Transactional 미사용 — 멱등성 키 UNIQUE 제약은 커밋 후에만 다른 스레드가 감지할 수 있다.
  */
-@SpringBootTest
-class TradeIdempotencyIntegrationTest {
+class TradeIdempotencyIntegrationTest extends IntegrationTestSupport {
 
     @Autowired TradeService tradeService;
     @Autowired UserAccountRepository userAccountRepository;
