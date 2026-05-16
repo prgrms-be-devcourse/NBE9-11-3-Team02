@@ -47,9 +47,9 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).stockCode()).isEqualTo("005930");
-        assertThat(result.get(0).quantity()).isEqualTo(10L);
-        assertThat(result.get(0).currentPrice()).isEqualTo(75000L);
+        assertThat(result.get(0).getStockCode()).isEqualTo("005930");
+        assertThat(result.get(0).getQuantity()).isEqualTo(10L);
+        assertThat(result.get(0).getCurrentPrice()).isEqualTo(75000L);
     }
 
     @Test
@@ -66,6 +66,6 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).currentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
+        assertThat(result.get(0).getCurrentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
     }
 }
