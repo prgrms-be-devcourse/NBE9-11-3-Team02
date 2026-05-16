@@ -31,7 +31,7 @@ class AssetServiceTest {
     @Test
     @DisplayName("보유 종목 목록 및 실시간 현재가 정상 매핑 테스트")
     void getUserStocks_Success() {
-        Long userId = 1L;
+        long userId = 1L;
         Users user = new Users("testuser", "pw", "테스터");
         Stock stock1 = new Stock("005930", "삼성전자", null); // 실제 프로젝트의 Stock 생성자 스펙에 맞춰 수정 필요
         UserStock userStock1 = new UserStock(user, stock1, 10L, 50000L);
@@ -47,15 +47,15 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getStockCode()).isEqualTo("005930");
-        assertThat(result.get(0).getQuantity()).isEqualTo(10L);
-        assertThat(result.get(0).getCurrentPrice()).isEqualTo(75000L);
+        assertThat(result.getFirst().getStockCode()).isEqualTo("005930");
+        assertThat(result.getFirst().getQuantity()).isEqualTo(10L);
+        assertThat(result.getFirst().getCurrentPrice()).isEqualTo(75000L);
     }
 
     @Test
     @DisplayName("실시간 현재가 캐시 누락 시 0원으로 반환 방어 로직 테스트")
     void getUserStocks_WhenCacheMiss_ReturnsZero() {
-        Long userId = 1L;
+        long userId = 1L;
         Users user = new Users("testuser", "pw", "테스터");
         Stock stock1 = new Stock("005930", "삼성전자", null);
         UserStock userStock1 = new UserStock(user, stock1, 10L, 50000L);
@@ -66,6 +66,6 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getCurrentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
+        assertThat(result.getFirst().getCurrentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
     }
 }
