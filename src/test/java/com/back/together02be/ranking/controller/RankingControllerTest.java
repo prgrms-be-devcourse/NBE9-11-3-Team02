@@ -1,36 +1,28 @@
 package com.back.together02be.ranking.controller;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import com.back.together02be.ranking.dto.response.RankingRes;
-import com.back.together02be.ranking.service.RankingSeasonService;
-import com.back.together02be.ranking.service.RankingService;
-import com.back.together02be.ranking.service.RankingSnapshotService;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-@SpringBootTest
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.back.together02be.ranking.dto.response.RankingRes;
+import com.back.together02be.ranking.service.RankingSeasonService;
+import com.back.together02be.ranking.service.RankingService;
+import com.back.together02be.ranking.service.RankingSnapshotService;
+import com.back.together02be.support.ControllerTestSupport;
+
 @AutoConfigureMockMvc(addFilters = false)
 @DisplayName("RankingController - 랭킹 API 통합 테스트")
-class RankingControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
+class RankingControllerTest extends ControllerTestSupport {
 
     @MockitoBean
     private RankingService rankingService;

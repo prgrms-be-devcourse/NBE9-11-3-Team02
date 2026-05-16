@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
@@ -16,19 +15,14 @@ import com.back.together02be.chart.constant.ChartPeriod;
 import com.back.together02be.chart.dto.response.KisChartApiRes;
 import com.back.together02be.chart.service.ChartService;
 import com.back.together02be.infra.kis.rest.KisPriceClient;
-import com.back.together02be.infra.kis.websocket.KisWebSocketClient;
+import com.back.together02be.support.IntegrationTestSupport;
 
-@SpringBootTest
 @DisplayName("ChartService 캐시 통합 테스트")
-class ChartCacheIntegrationTest {
+class ChartCacheIntegrationTest extends IntegrationTestSupport {
 
 	// Mock
-
 	@MockitoBean
 	private KisPriceClient kisPriceClient;
-
-	@MockitoBean
-	private KisWebSocketClient kisWebSocketClient;  // @PostConstruct 소켓 연결 차단
 
 	@Autowired
 	private ChartService chartService;

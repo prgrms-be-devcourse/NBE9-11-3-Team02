@@ -1,8 +1,23 @@
 package com.back.together02be.trade.processor;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
+import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.back.together02be.achievement.listener.AchievementEventListener;
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
@@ -13,25 +28,12 @@ import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.entity.StockMarket;
 import com.back.together02be.stock.repository.StockRepository;
-import com.back.together02be.achievement.listener.AchievementEventListener;
 import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.support.IntegrationTestSupport;
 import com.back.together02be.trade.dto.BuyReq;
 import com.back.together02be.trade.repository.TradeRepository;
 import com.back.together02be.users.entity.Users;
 import com.back.together02be.users.repository.UsersRepository;
-import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 /**
  * 동시성 통합 테스트.
@@ -39,8 +41,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
  * @Transactional 미사용 — 동시 스레드가 커밋된 데이터를 읽어야 하므로
  * 각 테스트 후 @AfterEach에서 데이터를 직접 정리한다.
  */
-@SpringBootTest
-class TradeConcurrencyTest {
+class TradeConcurrencyTest extends IntegrationTestSupport {
 
     @Autowired
     TradeBuyProcessor tradeBuyProcessor;

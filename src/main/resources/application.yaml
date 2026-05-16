@@ -3,8 +3,7 @@ spring:
     name: together-03-be
 
   profiles:
-    active: prod
-    include: secret, local
+    include: secret
 
   cache:
     type: caffeine
