@@ -1,12 +1,10 @@
 package com.back.together02be.global.security;
 
-import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.Collection;
 
-@Getter
 public class SecurityUser extends User {
 
     private final Long id;
@@ -22,5 +20,13 @@ public class SecurityUser extends User {
         super(username, password, authorities);
         this.id = id;
         this.nickname = nickname;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 }

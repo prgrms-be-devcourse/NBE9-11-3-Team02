@@ -6,28 +6,29 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
-@NoArgsConstructor
 public class Stock extends BaseEntity {
 
-	@Column(nullable = false, unique = true)
-	private String stockCode;
+    @Column(nullable = false, unique = true)
+    private String stockCode;
 
-	@Column(nullable = false)
-	private String stockName;
+    @Column(nullable = false)
+    private String stockName;
 
-	@Column(nullable = false)
-	@Enumerated(EnumType.STRING)
-	private StockMarket market;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private StockMarket market;
 
-	public Stock(String stockCode, String stockName, StockMarket market) {
-		this.stockCode = stockCode;
-		this.stockName = stockName;
-		this.market = market;
-	}
+    protected Stock() {}
 
+    public Stock(String stockCode, String stockName, StockMarket market) {
+        this.stockCode = stockCode;
+        this.stockName = stockName;
+        this.market = market;
+    }
+
+    public String getStockCode() { return stockCode; }
+    public String getStockName() { return stockName; }
+    public StockMarket getMarket() { return market; }
 }
