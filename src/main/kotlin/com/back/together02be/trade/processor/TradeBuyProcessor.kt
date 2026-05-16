@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
+import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
 import java.time.Duration
 import java.time.LocalDate
@@ -33,7 +34,7 @@ class TradeBuyProcessor(
     private val objectMapper: ObjectMapper,
     private val eventPublisher: ApplicationEventPublisher,
 ) {
-    @Transactional
+    @Transactional(isolation = Isolation.READ_COMMITTED)
     fun processBuy(userId: Long, idempotencyKey: String, request: BuyReq): BuyRes {
         val stock = stockRepository.findById(request.stockId!!)
             .orElseThrow { EntityNotFoundException("주식 정보가 없습니다.") }
