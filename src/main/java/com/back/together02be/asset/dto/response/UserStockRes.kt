@@ -1,22 +1,22 @@
-package com.back.together02be.asset.dto.response;
+package com.back.together02be.asset.dto.response
 
-import com.back.together02be.asset.entity.UserStock;
+import com.back.together02be.asset.entity.UserStock
 
-public record UserStockRes(
-        String stockCode,
-        String stockName,
-        Long quantity,
-        Long averagePrice,
-        Long currentPrice
+data class UserStockRes(
+    val stockCode: String,
+    val stockName: String,
+    val quantity: Long,
+    val averagePrice: Long,
+    val currentPrice: Long
 ) {
-    public static UserStockRes from(UserStock userStock,Long currentPrice) {
-        return new UserStockRes(
-                userStock.getStock().getStockCode(),
-                userStock.getStock().getStockName(),
-                userStock.getQuantity(),
-                userStock.getAveragePrice(),
-                currentPrice
-
-        );
+    companion object {
+        @JvmStatic
+        fun from(userStock: UserStock, currentPrice: Long) = UserStockRes(
+            stockCode = userStock.stock.stockCode,
+            stockName = userStock.stock.stockName,
+            quantity = userStock.quantity,
+            averagePrice = userStock.averagePrice,
+            currentPrice = currentPrice
+        )
     }
 }
