@@ -6,11 +6,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Getter
 @NoArgsConstructor
 public class Stock extends BaseEntity {
 
@@ -30,4 +28,15 @@ public class Stock extends BaseEntity {
 		this.market = market;
 	}
 
+	public String getStockCode() {
+		return stockCode;
+	}
+
+	public String getStockName() {
+		return stockName;
+	}
+
+	public StockMarket getMarket() {
+		return market;
+	}
 }
