@@ -4,6 +4,7 @@ import com.back.together02be.asset.dto.response.UserStockRes;
 import com.back.together02be.asset.service.AssetService;
 import com.back.together02be.global.security.CustomAuthenticationFilter;
 import com.back.together02be.global.security.SecurityUser;
+import com.back.together02be.support.ControllerTestSupport;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
@@ -28,11 +29,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class AssetControllerQueryTest {
 
-    @Autowired MockMvc mockMvc;
+class AssetControllerQueryTest extends ControllerTestSupport {
 
     @MockitoBean AssetService assetService;
     @MockitoBean CustomAuthenticationFilter jwtAuthFilter;
