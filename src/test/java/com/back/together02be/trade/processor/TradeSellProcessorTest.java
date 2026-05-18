@@ -4,8 +4,6 @@ import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.stock.entity.StockMarket;
-import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.entity.StockMarket;
@@ -14,7 +12,6 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore;
 import com.back.together02be.trade.dto.request.TradeSellReq;
 import com.back.together02be.trade.dto.response.TradeSellRes;
 import com.back.together02be.trade.repository.TradeRepository;
-import com.back.together02be.users.entity.Users;
 import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.users.entity.Users;
 import org.junit.jupiter.api.AfterEach;
@@ -91,7 +88,7 @@ class TradeSellProcessorTest {
 
         TradeSellRes res = tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 10L, 50000L));
 
-        assertThat(res.quantity()).isEqualTo(10L);
+    assertThat(res.getQuantity()).isEqualTo(10L);
         verify(tradeRepository).save(any());
     }
 

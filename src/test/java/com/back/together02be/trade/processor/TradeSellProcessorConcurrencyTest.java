@@ -1,30 +1,5 @@
 package com.back.together02be.trade.processor;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.transaction.annotation.Propagation.*;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
@@ -40,6 +15,30 @@ import com.back.together02be.trade.repository.TradeRepository;
 import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.users.entity.Users;
 import com.back.together02be.users.repository.UsersRepository;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.mockStatic;
+import static org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED;
 
 @Transactional(propagation = NOT_SUPPORTED) // 각 스레드가 독립적인 트랜잭션을 가지도록
 class TradeSellProcessorConcurrencyTest extends IntegrationTestSupport {
@@ -142,7 +141,7 @@ class TradeSellProcessorConcurrencyTest extends IntegrationTestSupport {
 
                     System.out.println("[Thread-" + threadId + "] 매도 시도 시작 (수량: " + sellQuantityPerThread + ")");
 
-                    TradeSellReq request = new TradeSellReq(null, stockId, sellQuantityPerThread, STOCK_PRICE);
+                    TradeSellReq request = new TradeSellReq(0L, stockId, sellQuantityPerThread, STOCK_PRICE);
                     tradeSellProcessor.processSell(userId,request);
                     successCount.incrementAndGet();
 
@@ -221,13 +220,13 @@ class TradeSellProcessorConcurrencyTest extends IntegrationTestSupport {
             final int threadId = i;
             executorService.submit(() -> {
                 try (MockedStatic<MarketTimeValidator> sw = mockStatic(MarketTimeValidator.class)){
-                    sw.when(MarketTimeValidator::validateMarketOpen).thenAnswer(inv->null);
+                    sw.when(()->MarketTimeValidator.validateMarketOpen()).thenAnswer(inv->null);
 
                     startLatch.await();
 
                     System.out.println("[Thread-" + threadId + "] ▶ 전량 매도 시도 (요청 수량: " + sellQuantity + ")");
 
-                    TradeSellReq request = new TradeSellReq(null, stockId, sellQuantity, STOCK_PRICE);
+                    TradeSellReq request = new TradeSellReq(0L, stockId, sellQuantity, STOCK_PRICE);
                     tradeSellProcessor.processSell(userId, request);
                     successCount.incrementAndGet();
 

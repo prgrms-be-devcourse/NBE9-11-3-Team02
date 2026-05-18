@@ -1,28 +1,5 @@
 package com.back.together02be.trade.controller;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.ResultActions;
-
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
@@ -32,8 +9,25 @@ import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.service.RealTimeStockPriceStore;
 import com.back.together02be.support.ControllerTestSupport;
 import com.back.together02be.trade.util.MarketTimeValidator;
-
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.*;
+import org.mockito.MockedStatic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.ResultActions;
+
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.mockito.Mockito.mockStatic;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @Transactional
 public class TradeControllerSellTest extends ControllerTestSupport {
@@ -70,7 +64,7 @@ public class TradeControllerSellTest extends ControllerTestSupport {
     @BeforeEach
     void setUp() {
         //호출시 아무 일도 하지 않도록 설정
-        mockedValidator.when(MarketTimeValidator::validateMarketOpen)
+        mockedValidator.when(()->MarketTimeValidator.validateMarketOpen())
                 .thenAnswer(invocation -> null);
 
         accessToken = JwtUtil.generateAccessToken(

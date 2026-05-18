@@ -52,7 +52,7 @@ class TradeSellProcessor(
     @Transactional
     fun processSell(userId: Long, request: TradeSellReq): TradeSellRes {
         // 0. 장 마감 조회
-        marketTimeValidator.validateMarketOpen()
+        MarketTimeValidator.validateMarketOpen()
 
         // 1. 주식 정보 조회 및 보유 주식 조회
         val stock = stockRepository.findById(request.stockId)
