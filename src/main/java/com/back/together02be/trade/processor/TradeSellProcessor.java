@@ -58,10 +58,10 @@ public class TradeSellProcessor {
         MarketTimeValidator.validateMarketOpen();
 
         // 1. 주식 정보 조회 및 보유 주식 조회
-        Stock stock = stockRepository.findById(request.stockId())
+        Stock stock = stockRepository.findById(request.getStockId())
                 .orElseThrow(() -> new EntityNotFoundException("주식 정보가 없습니다."));
 
-        UserStock userStock = userStockRepository.findByUsersIdAndStockId(userId,request.stockId())
+        UserStock userStock = userStockRepository.findByUsersIdAndStockId(userId,request.getStockId())
                 .orElseThrow(()->new EntityNotFoundException("보유하지 않은 주식입니다."));
 
 
@@ -76,7 +76,7 @@ public class TradeSellProcessor {
         Long price = Long.parseLong(stockPrice.getPrice());
 
         // 슬리피지 검증 0.98을 BigDecimal로 표현
-        BigDecimal minPrice = BigDecimal.valueOf(request.expectedPrice())
+        BigDecimal minPrice = BigDecimal.valueOf(request.getExpectedPrice())
                 .multiply(SELL_TOLERANCE_RATE)
                 .setScale(0, RoundingMode.FLOOR);
 
@@ -85,7 +85,7 @@ public class TradeSellProcessor {
         }
 
         // 3. 수량 검증
-        int updatedRows = userStockRepository.updateQuantity(userId, request.stockId(), request.quantity());
+        int updatedRows = userStockRepository.updateQuantity(userId, request.getStockId(), request.getQuantity());
 
         if (updatedRows == 0) {
             throw new IllegalStateException("보유 수량이 부족합니다.");
@@ -93,9 +93,9 @@ public class TradeSellProcessor {
 
 
         // 5. 수익 / 금액 계산
-        long profit = (price - userStock.getAveragePrice()) * request.quantity();
-        long amount = price * request.quantity();
-        long purchaseAmount = userStock.getAveragePrice() * request.quantity();
+        long profit = (price - userStock.getAveragePrice()) * request.getQuantity();
+        long amount = price * request.getQuantity();
+        long purchaseAmount = userStock.getAveragePrice() * request.getQuantity();
 
         //6. 예수금 증가
         int accountUpdated = userAccountRepository.updateDepositAndPurchase(userId, amount, purchaseAmount);
@@ -104,8 +104,8 @@ public class TradeSellProcessor {
         }
 
         //7. 수량 차감 및 전량 매도시 삭제
-        if(userStock.getQuantity()==request.quantity()) {
-            userStockRepository.deleteByUserAndStock(userId, request.stockId());
+        if(userStock.getQuantity()==request.getQuantity()) {
+            userStockRepository.deleteByUserAndStock(userId, request.getStockId());
         }
 
         // 8. 거래 내역 저장 (account는 여기서 조회)
