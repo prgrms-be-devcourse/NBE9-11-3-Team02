@@ -3,7 +3,8 @@ package com.back.together02be.trade.util
 import java.time.*
 
 object MarketTimeValidator {
-    fun validateMarketOpen(clock: Clock = Clock.system(ZoneId.of("Asia/Seoul"))) {
+    var clock: Clock = Clock.system(ZoneId.of("Asia/Seoul"))
+    fun validateMarketOpen() {
         val now = LocalDateTime.now(clock)
         val day = now.dayOfWeek
         val time = now.toLocalTime()

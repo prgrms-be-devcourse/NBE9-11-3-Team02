@@ -8,8 +8,10 @@ import com.back.together02be.global.util.JwtUtil
 import com.back.together02be.stock.dto.RealtimeStockPrice
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.ControllerTestSupport
+import com.back.together02be.trade.util.MarketTimeValidator
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -20,7 +22,10 @@ import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
+import java.time.Clock
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -41,8 +46,17 @@ class TradeControllerSellTest : ControllerTestSupport(){
 
     private lateinit var accessToken: String
 
+    private val fixedClock = Clock.fixed(
+        LocalDateTime.of(2024, 1, 15, 10, 0)
+            .atZone(ZoneId.of("Asia/Seoul")).toInstant(),
+        ZoneId.of("Asia/Seoul")
+    )
+
+
     @BeforeEach
     fun setUp(){
+        MarketTimeValidator.clock = fixedClock
+
         accessToken = JwtUtil.generateAccessToken(
             jwtSecret,
             60 * 60,
@@ -76,10 +90,16 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .changeSign("1")
             .change("1")
             .changeRate("3")
-            .tradeTime(LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss")))
+            .tradeTime(LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss")))
             .build()
         realtimeStockPriceService.put("005930", samsungPrice)
     }
+    @AfterEach
+    fun tearDown() {
+        // 수정: clock 복원
+        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
+    }
+
     @Test
     @DisplayName("매도 성공 - 부분 매도")
     fun t1() {

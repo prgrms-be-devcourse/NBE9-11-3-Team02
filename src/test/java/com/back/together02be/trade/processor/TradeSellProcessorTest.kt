@@ -11,12 +11,10 @@ import com.back.together02be.stock.repository.StockRepository
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.repository.TradeRepository
+import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
@@ -24,13 +22,12 @@ import org.mockito.Mock
 import org.mockito.Mockito.any
 import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
-import java.time.LocalDate
+import java.time.Clock
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
-import java.time.Clock
 
 @ExtendWith(MockitoExtension::class)
 class TradeSellProcessorTest {
@@ -45,6 +42,14 @@ class TradeSellProcessorTest {
 
     //private lateinit var marketValidator: MockedStatic<MarketTimeValidator>
 
+
+    private val fixedClock = Clock.fixed(
+        LocalDateTime.of(2024, 1, 15, 10, 0)
+            .atZone(ZoneId.of("Asia/Seoul")).toInstant(),
+        ZoneId.of("Asia/Seoul")
+    )
+
+
     @BeforeEach
     fun setUp() {
         tradeSellProcessor = TradeSellProcessor(
@@ -54,6 +59,13 @@ class TradeSellProcessorTest {
             stockRepository,
             tradeRepository
         )
+        MarketTimeValidator.clock = fixedClock
+    }
+
+    @AfterEach
+    fun tearDown() {
+        // 수정: 테스트 후 원래 clock으로 복원
+        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
     }
 
 
@@ -73,13 +85,7 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val fixedClock = Clock.fixed(
-            LocalDateTime.of(LocalDate.now(), LocalTime.of(10, 0))
-                .atZone(ZoneId.of("Asia/Seoul")).toInstant(),
-            ZoneId.of("Asia/Seoul")
-        )
-
-        val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
         given(stockPriceStore.get(stock.stockCode)).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
@@ -105,7 +111,7 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
         given(stockPriceStore.get(stock.stockCode)).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
@@ -130,7 +136,7 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
         given(stockPriceStore.get(stock.stockCode)).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
@@ -151,7 +157,7 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
         given(stockPriceStore.get(any())).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )

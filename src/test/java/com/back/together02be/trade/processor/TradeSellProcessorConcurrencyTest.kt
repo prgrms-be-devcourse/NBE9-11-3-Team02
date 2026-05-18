@@ -11,6 +11,7 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.IntegrationTestSupport
 import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.repository.TradeRepository
+import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import com.back.together02be.users.repository.UsersRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -21,7 +22,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
+import java.time.Clock
+import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -64,8 +68,16 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
     private val INITIAL_DEPOSIT = 1_000_000L
     private val STOCK_PRICE = 10_000L
 
+    private val fixedClock = Clock.fixed(
+        LocalDateTime.of(2024, 1, 15, 10, 0)
+            .atZone(ZoneId.of("Asia/Seoul")).toInstant(),
+        ZoneId.of("Asia/Seoul")
+    )
+
     @BeforeEach
     fun setUp() {
+        MarketTimeValidator.clock = fixedClock
+
         val stock = stockRepository.findByStockCode("005930")
             .orElseThrow { IllegalStateException("삼성전자 종목이 초기 데이터에 없습니다.") }
         stockId = stock.id
@@ -80,7 +92,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         val userStock = UserStock(user, stock, INITIAL_QUANTITY, STOCK_PRICE)
         userStockRepository.saveAndFlush(userStock)
 
-        val currentTime = LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss"))
+        val currentTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
         val realtimePrice = RealtimeStockPrice.builder()
             .stockCode("005930")
             .price(STOCK_PRICE.toString())
@@ -94,6 +106,8 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
     @AfterEach
     fun tearDown() {
+        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
+
         tradeRepository.deleteAll()
         userStockRepository.deleteAll()
         userAccountRepository.deleteAll()
