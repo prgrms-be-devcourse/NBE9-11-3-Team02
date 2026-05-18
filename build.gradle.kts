@@ -1,26 +1,18 @@
 plugins {
     kotlin("jvm") version "2.3.20"
-    kotlin("plugin.jpa") version "2.3.20"
     kotlin("plugin.spring") version "2.3.20"
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
-    kotlin("plugin.lombok") version "2.3.20"    // lombok
+    kotlin("plugin.jpa") version "2.3.20"
+    kotlin("plugin.lombok") version "2.3.20"
 }
 
 group = "com.back"
 version = "0.0.1-SNAPSHOT"
 description = "together-03-be"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(25)
-    }
-}
-
 kotlin {
-    compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict")
-    }
+    jvmToolchain(25)
 }
 
 repositories {
@@ -54,9 +46,8 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.13.0")
     implementation ("org.springframework.boot:spring-boot-starter-cache")
     implementation ("com.github.ben-manes.caffeine:caffeine")
-
-    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("tools.jackson.module:jackson-module-kotlin")
 }
 
 kotlin {
