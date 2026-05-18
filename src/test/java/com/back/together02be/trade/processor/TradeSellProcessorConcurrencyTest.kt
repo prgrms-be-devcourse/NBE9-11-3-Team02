@@ -17,6 +17,7 @@ import com.back.together02be.users.repository.UsersRepository
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.mockito.MockedStatic
+import org.mockito.Mockito
 import org.mockito.Mockito.mockStatic
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Propagation
@@ -28,6 +29,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
@@ -69,8 +71,14 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         @JvmStatic
         @BeforeAll
         fun beforeAll() {
-            mockedValidator = mockStatic(MarketTimeValidator::class.java)
+            mockedValidator =
+                Mockito.mockStatic(
+                    MarketTimeValidator::class.java
+                )
 
+            mockedValidator.`when`<Unit> {
+                MarketTimeValidator.validateMarketOpen()
+            }
         }
 
         @JvmStatic

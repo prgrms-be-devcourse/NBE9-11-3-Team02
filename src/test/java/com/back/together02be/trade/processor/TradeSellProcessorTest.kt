@@ -14,17 +14,15 @@ import com.back.together02be.trade.repository.TradeRepository
 import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.MockedStatic
-import org.mockito.Mockito.*
+import org.mockito.Mockito
+import org.mockito.Mockito.any
+import org.mockito.Mockito.verify
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
@@ -53,9 +51,13 @@ class TradeSellProcessorTest {
             tradeRepository
         )
 
-        marketValidator = mockStatic(MarketTimeValidator::class.java)
-        marketValidator.`when`<Any> { MarketTimeValidator.validateMarketOpen() }
-            .thenReturn(null)
+        marketValidator = Mockito.mockStatic(
+            MarketTimeValidator::class.java
+        )
+
+        marketValidator.`when`<Unit> {
+            MarketTimeValidator.validateMarketOpen()
+        }
     }
 
     @AfterEach

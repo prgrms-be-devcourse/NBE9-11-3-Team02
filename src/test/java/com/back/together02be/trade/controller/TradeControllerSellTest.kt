@@ -50,11 +50,9 @@ class TradeControllerSellTest : ControllerTestSupport(){
         fun beforeAll() {
             mockedValidator = mockStatic(MarketTimeValidator::class.java)
 
-            mockedValidator
-                .`when`<Unit> {
-                    MarketTimeValidator.validateMarketOpen()
-                }
-                .then { }
+            mockedValidator.`when`<Unit> {
+                MarketTimeValidator.validateMarketOpen()
+            }
         }
 
         @JvmStatic
