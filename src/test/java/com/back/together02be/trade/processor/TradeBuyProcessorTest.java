@@ -26,7 +26,7 @@ import com.back.together02be.trade.dto.BuyRes;
 import com.back.together02be.trade.entity.Trade;
 import com.back.together02be.trade.repository.TradeRepository;
 import com.back.together02be.users.entity.Users;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -79,6 +79,10 @@ class TradeBuyProcessorTest {
             ReflectionTestUtils.setField(trade, "id", 1L);
             return trade;
         });
+        // Kotlin 2.x K2 컴파일러는 Spring Data @NonNull 어노테이션 때문에
+        // save() 리턴값에 null-check assertion을 생성함.
+        // stub이 없으면 Mockito가 null 리턴 → assertion 실패 → NPE.
+        lenient().when(userStockRepository.save(any(UserStock.class))).thenAnswer(invocation -> invocation.getArgument(0));
     }
 
     private RealtimeStockPrice mockPrice(String stockCode, long price) {
@@ -100,9 +104,9 @@ class TradeBuyProcessorTest {
 
         BuyRes response = tradeBuyProcessor.processBuy(1L, "test-key", new BuyReq(1L, quantity, 70_000L));
 
-        assertThat(response.price()).isEqualTo(price);
-        assertThat(response.quantity()).isEqualTo(quantity);
-        assertThat(response.amount()).isEqualTo(amount);
+        assertThat(response.getPrice()).isEqualTo(price);
+        assertThat(response.getQuantity()).isEqualTo(quantity);
+        assertThat(response.getAmount()).isEqualTo(amount);
 
         verify(userAccountRepository).decreaseDepositIfSufficient(1L, amount);
         verify(userStockRepository).save(any(UserStock.class));
@@ -170,7 +174,7 @@ class TradeBuyProcessorTest {
 
         BuyRes response = tradeBuyProcessor.processBuy(1L, "test-key", new BuyReq(1L, 10L, expectedPrice));
 
-        assertThat(response.price()).isEqualTo(currentPrice);
+        assertThat(response.getPrice()).isEqualTo(currentPrice);
     }
 
     @Test
@@ -209,7 +213,7 @@ class TradeBuyProcessorTest {
 
         BuyRes response = tradeBuyProcessor.processBuy(1L, "test-key", new BuyReq(1L, 10L, 70_000L));
 
-        assertThat(response.price()).isEqualTo(70_000L);
+        assertThat(response.getPrice()).isEqualTo(70_000L);
     }
 
     @Test
