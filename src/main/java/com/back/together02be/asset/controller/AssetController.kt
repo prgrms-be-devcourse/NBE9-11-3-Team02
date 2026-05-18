@@ -44,8 +44,8 @@ class AssetController(
     fun totalPrice(
         @AuthenticationPrincipal user: SecurityUser
     ): ApiRes<TotalPurchaseRes> {
-        val userId = user.id             // user.getId() -> user.id
-        val nickname = user.nickname     // user.getNickname() -> user.nickname
+        val userId = user.id
+        val nickname = user.nickname
 
         val totalPurchase = assetService.getTotalAmountByUserId(userId)
         val stockInfos = assetService.getStockInfo(userId)
