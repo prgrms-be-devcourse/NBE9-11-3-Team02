@@ -1,12 +1,11 @@
 package com.back.together02be.asset.service;
 
-import com.back.together02be.asset.dto.response.UserStockRes;
-import com.back.together02be.asset.entity.UserStock;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.users.entity.Users;
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,11 +13,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
+import com.back.together02be.asset.dto.response.UserStockRes;
+import com.back.together02be.asset.entity.UserStock;
+import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.entity.Stock;
+import com.back.together02be.stock.entity.StockMarket;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.users.entity.Users;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
@@ -31,9 +33,9 @@ class AssetServiceTest {
     @Test
     @DisplayName("보유 종목 목록 및 실시간 현재가 정상 매핑 테스트")
     void getUserStocks_Success() {
-        Long userId = 1L;
+        long userId = 1L;
         Users user = new Users("testuser", "pw", "테스터");
-        Stock stock1 = new Stock("005930", "삼성전자", null); // 실제 프로젝트의 Stock 생성자 스펙에 맞춰 수정 필요
+        Stock stock1 = new Stock("005930", "삼성전자", StockMarket.KOSPI); // 실제 프로젝트의 Stock 생성자 스펙에 맞춰 수정 필요
         UserStock userStock1 = new UserStock(user, stock1, 10L, 50000L);
 
         RealtimeStockPrice mockPrice = RealtimeStockPrice.builder()
@@ -47,17 +49,17 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).stockCode()).isEqualTo("005930");
-        assertThat(result.get(0).quantity()).isEqualTo(10L);
-        assertThat(result.get(0).currentPrice()).isEqualTo(75000L);
+        assertThat(result.getFirst().getStockCode()).isEqualTo("005930");
+        assertThat(result.getFirst().getQuantity()).isEqualTo(10L);
+        assertThat(result.getFirst().getCurrentPrice()).isEqualTo(75000L);
     }
 
     @Test
     @DisplayName("실시간 현재가 캐시 누락 시 0원으로 반환 방어 로직 테스트")
     void getUserStocks_WhenCacheMiss_ReturnsZero() {
-        Long userId = 1L;
+        long userId = 1L;
         Users user = new Users("testuser", "pw", "테스터");
-        Stock stock1 = new Stock("005930", "삼성전자", null);
+        Stock stock1 = new Stock("005930", "삼성전자", StockMarket.KOSPI);
         UserStock userStock1 = new UserStock(user, stock1, 10L, 50000L);
 
         when(userStockRepository.findAllByUsersId(userId)).thenReturn(List.of(userStock1));
@@ -66,6 +68,6 @@ class AssetServiceTest {
         List<UserStockRes> result = assetService.getUserStocks(userId);
 
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).currentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
+        assertThat(result.getFirst().getCurrentPrice()).isEqualTo(0L); // 0원으로 안전하게 처리되는지 확인
     }
 }

@@ -4,6 +4,8 @@ import com.back.together02be.global.entity.BaseEntity
 import com.back.together02be.stock.entity.Stock
 import com.back.together02be.users.entity.Users
 import jakarta.persistence.*
+import lombok.Getter
+import lombok.NoArgsConstructor
 
 @Entity
 @Table(uniqueConstraints = [UniqueConstraint(columnNames = ["users_id", "stock_id"])])
@@ -14,7 +16,7 @@ class UserStock(
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_id")
-    val stock: Stock?, // 자바에서 nullable 설정이 없었으므로 안전하게 Nullable 처리 (필요시 Stock으로 변경 가능)
+    val stock: Stock, // 보유한 주식 종목 자체는 변경되지 않으므로 val
 
     @Column(nullable = false)
     var quantity: Long,

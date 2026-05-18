@@ -4,6 +4,8 @@ import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.stock.entity.StockMarket;
+import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.entity.StockMarket;
@@ -12,6 +14,7 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore;
 import com.back.together02be.trade.dto.request.TradeSellReq;
 import com.back.together02be.trade.dto.response.TradeSellRes;
 import com.back.together02be.trade.repository.TradeRepository;
+import com.back.together02be.users.entity.Users;
 import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.users.entity.Users;
 import org.junit.jupiter.api.AfterEach;
@@ -32,8 +35,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TradeSellProcessorTest {
@@ -62,7 +64,9 @@ class TradeSellProcessorTest {
     // 공통 Mocking 설정을 위한 Helper 메서드 (코드 중복 제거)
     private void mockCommonDependencies(Stock stock, UserStock userStock, UserAccount account) {
         given(stockRepository.findById(any())).willReturn(Optional.of(stock));
-        given(userStockRepository.findByUsersIdAndStockId(any(), any())).willReturn(Optional.of(userStock));
+//        given(userStockRepository.findByUsersIdAndStockId(any(), any())).willReturn(Optional.of(userStock));
+        // 두 인자 모두 Long 타입이라면 anyLong() 사용
+        given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(Optional.of(userStock));
         //given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
         //given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
     }
@@ -71,16 +75,17 @@ class TradeSellProcessorTest {
     @Test
     @DisplayName("t1: 부분 매도 성공")
     void t1() {
-        Users mockUser = new Users("a","12345678","c");
         Stock stock = new Stock("005930", "삼성전자", StockMarket.KOSPI);
-        UserStock userStock = new UserStock(mockUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(mockUser, 1000000L, 0L);
+        // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
+        Users dummyUser = new Users("username", "password", "nickname");
+        UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account);
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
-        given(userStockRepository.updateQuantity(any(), any(), any())).willReturn(1);
+        given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
         given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
@@ -94,16 +99,17 @@ class TradeSellProcessorTest {
     @Test
     @DisplayName("t2: 전량 매도 성공")
     void t2() {
-        Users mockUser = new Users("a","12345678","c");
         Stock stock = new Stock("005930", "삼성전자", StockMarket.KOSPI);
-        UserStock userStock = new UserStock(mockUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(mockUser, 1000000L, 0L);
+        // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
+        Users dummyUser = new Users("username", "password", "nickname");
+        UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account);
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
-        given(userStockRepository.updateQuantity(any(), any(), any())).willReturn(1);
+        given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
         given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
@@ -116,10 +122,11 @@ class TradeSellProcessorTest {
     @Test
     @DisplayName("t3: 실패 - 가격 변동폭 초과")
     void t3() {
-        Users mockUser = new Users("a","12345678","c");
         Stock stock = new Stock("005930", "삼성전자", StockMarket.KOSPI);
-        UserStock userStock = new UserStock(mockUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(mockUser, 1000000L, 0L);
+        // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
+        Users dummyUser = new Users("username", "password", "nickname");
+        UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account); // 필수!!
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
@@ -134,17 +141,18 @@ class TradeSellProcessorTest {
     @Test
     @DisplayName("t4: 실패 - 보유 수량 부족")
     void t4() {
-        Users mockUser = new Users("a","12345678","c");
         Stock stock = new Stock("005930", "삼성전자", StockMarket.KOSPI);
-        UserStock userStock = new UserStock(mockUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(mockUser, 1000000L, 0L);
+        // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
+        Users dummyUser = new Users("username", "password", "nickname");
+        UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account); // 필수!!
 
         // [추가] 가격 정보가 정상적으로 들어오도록 설정
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
         given(stockPriceStore.get(any())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
-        given(userStockRepository.updateQuantity(any(), any(), any())).willReturn(0);
+        given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(0);
 
         assertThrows(IllegalStateException.class, () ->
                 tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 100L, 10000L)));
