@@ -1,11 +1,11 @@
-package com.back.together02be.achievement.dto;
+package com.back.together02be.achievement.dto
 
-import java.time.LocalDateTime;
+import java.time.LocalDateTime
 
-public record AchievementRes(
-        String code,
-        String name,
-        String description,
-        boolean isAchieved,
-        LocalDateTime achievedAt
-) {}
+data class AchievementRes(
+    val code: String,
+    val name: String,
+    val description: String,
+    val isAchieved: Boolean,
+    val achievedAt: LocalDateTime?
+)
