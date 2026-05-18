@@ -76,7 +76,7 @@ class TradeSellProcessorTest {
         // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
         Users dummyUser = new Users("username", "password", "nickname");
         UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(null, 1000000L, 0L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account);
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
@@ -100,7 +100,7 @@ class TradeSellProcessorTest {
         // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
         Users dummyUser = new Users("username", "password", "nickname");
         UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(null, 1000000L, 0L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account);
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
@@ -123,7 +123,7 @@ class TradeSellProcessorTest {
         // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
         Users dummyUser = new Users("username", "password", "nickname");
         UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(null, 1000000L, 0L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account); // 필수!!
 
         String nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"));
@@ -142,7 +142,7 @@ class TradeSellProcessorTest {
         // 더미 Users 객체 생성 (생성자 인자: username, password, nickname)
         Users dummyUser = new Users("username", "password", "nickname");
         UserStock userStock = new UserStock(dummyUser, stock, 20L, 10000L);
-        UserAccount account = new UserAccount(null, 1000000L, 0L);
+        UserAccount account = new UserAccount(dummyUser, 1000000L, 0L);
         mockCommonDependencies(stock, userStock, account); // 필수!!
 
         // [추가] 가격 정보가 정상적으로 들어오도록 설정
