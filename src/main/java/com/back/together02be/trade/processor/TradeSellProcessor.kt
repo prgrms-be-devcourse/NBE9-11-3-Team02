@@ -28,7 +28,7 @@ class TradeSellProcessor(
     private val userStockRepository: UserStockRepository,
     private val stockRepository: StockRepository,
     private val tradeRepository: TradeRepository,
-    private val marketTimeValidator: MarketTimeValidator
+    //private val marketTimeValidator: MarketTimeValidator
 ) {
 
     companion object {

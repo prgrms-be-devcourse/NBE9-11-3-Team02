@@ -9,7 +9,7 @@ import java.time.ZoneId
 @Component
 class MarketTimeValidator {
     companion object {
-        @JvmStatic //TODO
+        @JvmStatic
         fun validateMarketOpen() {
             val now = LocalDateTime.now(ZoneId.of("Asia/Seoul"))
             val day = now.dayOfWeek
