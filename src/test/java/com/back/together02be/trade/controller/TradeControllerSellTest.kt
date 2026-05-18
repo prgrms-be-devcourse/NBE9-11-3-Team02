@@ -62,12 +62,14 @@ class TradeControllerSellTest : ControllerTestSupport(){
 
     @BeforeEach
     fun setUp(){
-        mockedValidator.`when`<Any> { MarketTimeValidator.validateMarketOpen() }
-            .thenReturn(Unit)
+        mockedValidator.reset()
+
+        mockedValidator.`when`<Unit> { MarketTimeValidator.validateMarketOpen() }
+            .thenAnswer {}
 
         accessToken = JwtUtil.generateAccessToken(
             jwtSecret,
-            60*60,
+            60 * 60,
             mapOf(
                 "id" to 1L,
                 "username" to "testuser",
