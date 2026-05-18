@@ -25,10 +25,10 @@ public class RealtimeStockPrice {
 	public static RealtimeStockPrice fromRest(String stockCode, KisPriceRes.Output output) {
 		return RealtimeStockPrice.builder()
 			.stockCode(stockCode)
-			.price(output.currentPrice()) // 현재가
-			.changeSign(output.changeSign()) // 전일 대비 부호
-			.change(output.priceDifference()) // 전일 대비 금액
-			.changeRate(output.changeRate()) // 전일 대비율
+			.price(output.getCurrentPrice()) // 현재가
+			.changeSign(output.getChangeSign()) // 전일 대비 부호
+			.change(output.getPriceDifference()) // 전일 대비 금액
+			.changeRate(output.getChangeRate()) // 전일 대비율
 			.tradeTime(null) // rest-> 체결 시간 없음
 			.build();
 	}
