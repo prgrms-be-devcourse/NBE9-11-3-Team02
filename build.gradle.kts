@@ -47,8 +47,8 @@ dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-cache")
     implementation ("com.github.ben-manes.caffeine:caffeine")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
-    implementation("tools.jackson.module:jackson-module-kotlin")
     testImplementation("org.mockito.kotlin:mockito-kotlin:5.4.0")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
 
 kotlin {
