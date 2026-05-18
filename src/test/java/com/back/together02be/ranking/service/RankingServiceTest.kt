@@ -1,6 +1,5 @@
 package com.back.together02be.ranking.service
 
-import com.back.together02be.ranking.dto.response.RankingRes
 import com.back.together02be.ranking.entity.Ranking
 import com.back.together02be.ranking.entity.RankingSnapshotType
 import com.back.together02be.ranking.repository.RankingRepository
@@ -48,11 +47,12 @@ internal class RankingServiceTest {
         val ranking1 = Ranking(user1, 1, BigDecimal("12.34"), 56170000L, RankingSnapshotType.DAILY, today)
         val ranking2 = Ranking(user2, 2, BigDecimal("8.50"), 54250000L, RankingSnapshotType.DAILY, today)
 
+        // 💡 Kotlin x Mockito 해결책: 엘비스 연산자(?:)를 활용해 NPE 방어
         given(
             rankingRepository.findRankings(
-                eq(RankingSnapshotType.DAILY),
-                eq(today),
-                any(Sort::class.java)
+                eq(RankingSnapshotType.DAILY) ?: RankingSnapshotType.DAILY,
+                eq(today) ?: today,
+                any(Sort::class.java) ?: Sort.unsorted()
             )
         ).willReturn(listOf(ranking1, ranking2))
 
@@ -62,7 +62,6 @@ internal class RankingServiceTest {
         // then
         assertThat(result).hasSize(2)
 
-        // Kotlin 전환 포인트: 배열처럼 직관적으로 접근하는 result[0] 문법 사용
         assertThat(result[0].userId).isEqualTo(1L)
         assertThat(result[0].nickname).isEqualTo("투자왕")
         assertThat(result[0].rank).isEqualTo(1)
@@ -86,11 +85,12 @@ internal class RankingServiceTest {
 
         val ranking = Ranking(user, 1, BigDecimal("15.50"), 57750000L, RankingSnapshotType.MONTHLY, snapshotDate)
 
+        // 💡 Kotlin x Mockito NPE 우회
         given(
             rankingRepository.findRankings(
-                eq(RankingSnapshotType.MONTHLY),
-                eq(snapshotDate),
-                any(Sort::class.java)
+                eq(RankingSnapshotType.MONTHLY) ?: RankingSnapshotType.MONTHLY,
+                eq(snapshotDate) ?: snapshotDate,
+                any(Sort::class.java) ?: Sort.unsorted()
             )
         ).willReturn(listOf(ranking))
 
@@ -110,12 +110,11 @@ internal class RankingServiceTest {
     @DisplayName("일간 랭킹 조회 시 Repository에 rankingPosition 오름차순 정렬 조건을 전달한다")
     fun 일간_랭킹_조회_정렬조건_검증() {
         // given
-        // Kotlin 전환 포인트: 빈 리스트 반환 시 타입 추론이 뛰어난 emptyList() 활용
         given(
             rankingRepository.findRankings(
-                eq(RankingSnapshotType.DAILY),
-                any(LocalDate::class.java),
-                any(Sort::class.java)
+                eq(RankingSnapshotType.DAILY) ?: RankingSnapshotType.DAILY,
+                any(LocalDate::class.java) ?: LocalDate.now(),
+                any(Sort::class.java) ?: Sort.unsorted()
             )
         ).willReturn(emptyList())
 
@@ -125,10 +124,11 @@ internal class RankingServiceTest {
         // then
         val sortCaptor = ArgumentCaptor.forClass(Sort::class.java)
 
+        // 💡 verify와 capture() 시에도 NPE가 터지므로 엘비스 연산자 방어
         verify(rankingRepository).findRankings(
-            eq(RankingSnapshotType.DAILY),
-            any(LocalDate::class.java),
-            sortCaptor.capture()
+            eq(RankingSnapshotType.DAILY) ?: RankingSnapshotType.DAILY,
+            any(LocalDate::class.java) ?: LocalDate.now(),
+            sortCaptor.capture() ?: Sort.unsorted()
         )
 
         val sort = sortCaptor.value
