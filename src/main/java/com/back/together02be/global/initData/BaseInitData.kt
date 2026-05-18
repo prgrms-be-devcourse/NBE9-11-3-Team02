@@ -132,19 +132,19 @@ class BaseInitData(
 
         // 4. 기본 업적 데이터 저장 (이전 단계에서 Achievement 엔티티에 @Builder를 추가했다고 가정)
         achievementRepository.save(
-            Achievement.builder()
-                .code("FIRST_TRADE")
-                .name("첫 주주 등극")
-                .description("생애 첫 주식 매수 성공")
-                .build()
+            Achievement(
+                code = "FIRST_TRADE",
+                name = "첫 주주 등극",
+                description = "생애 첫 주식 매수 성공" // 생성자에 정의된 파라미터에 맞게 매핑
+            )
         )
 
         achievementRepository.save(
-            Achievement.builder()
-                .code("BIG_SPENDER")
-                .name("모의투자 큰 손")
-                .description("누적 매수 금액 1,000만원 돌파")
-                .build()
+            Achievement(
+                code = "BIG_SPENDER",
+                name = "모의투자 큰 손",
+                description = "누적 매수 금액 1,000만원 돌파" // 생성자에 정의된 파라미터에 맞게 매핑
+            )
         )
 
         log.info("업적 초기 데이터 세팅 완료.")

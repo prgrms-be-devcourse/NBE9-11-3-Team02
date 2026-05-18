@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AchievementEventListener {
 
-    // 인터페이스를 구현한 모든 빈을 리스트로 자동 주입받습니다.
+    // 인터페이스를 구현한 모든 빈을 리스트로 자동 주입
     private final List<AchievementRule> rules; // 조건 로직들 자동 주입
     private final AchievementRepository achievementRepository;
     private final UserAchievementRepository userAchievementRepository;
@@ -37,7 +37,7 @@ public class AchievementEventListener {
         for (AchievementRule rule : rules) {
             String targetCode = rule.getTargetAchievementCode();
 
-            // 1. 이미 달성한 업적인지 DB 확인 (중복 지급 방지)
+            // 이미 달성한 업적인지 DB 확인 (중복 지급 방지)
             boolean alreadyAchieved = userAchievementRepository
                     .existsByUsersIdAndAchievement_Code(event.getUserId(), targetCode);
 
@@ -45,18 +45,21 @@ public class AchievementEventListener {
                 continue;
             }
 
-            // 2. 달성하지 않았다면 객체의 로직(if문) 평가
+
             if (rule.isSatisfied(event)) {
 
-                // 업적이 없으면 새로 생성하여 저장 (Get or Create 패턴)
-                Achievement achievementMeta = achievementRepository.findByCode(targetCode)
-                        .orElseGet(() -> achievementRepository.save(
-                                Achievement.builder()
-                                        .code(targetCode)
-                                        .name(rule.getDefaultName()) // 인터페이스에서 가져옴
-                                        .description(rule.getDefaultDescription())
-                                        .build()
-                        ));
+                // 업적이 없으면 새로 생성하여 저장
+                Achievement achievementMeta = achievementRepository.findByCode(targetCode);
+
+                if (achievementMeta == null) {
+                    achievementMeta = achievementRepository.save(
+                            new Achievement(
+                                    targetCode,
+                                    rule.getDefaultName(),
+                                    rule.getDefaultDescription()
+                            )
+                    );
+                }
 
                 Users user = usersRepository.getReferenceById(event.getUserId());
 
@@ -65,8 +68,6 @@ public class AchievementEventListener {
 
                 log.info("업적 달성! 유저ID: {}, 업적명: {}",
                         event.getUserId(), achievementMeta.getName());
-
-                // 필요하다면 여기서 프론트엔드로 알림(SSE, WebSocket) 전송
             }
         }
     }
