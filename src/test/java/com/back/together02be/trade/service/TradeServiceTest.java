@@ -16,7 +16,7 @@ import com.back.together02be.trade.dto.BuyReq;
 import com.back.together02be.trade.dto.BuyRes;
 import com.back.together02be.trade.processor.TradeBuyProcessor;
 import com.back.together02be.trade.processor.TradeSellProcessor;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;

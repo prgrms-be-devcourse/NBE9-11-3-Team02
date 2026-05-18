@@ -11,7 +11,7 @@ import com.back.together02be.trade.dto.BuyReq
 import com.back.together02be.trade.dto.BuyRes
 import com.back.together02be.trade.entity.Trade
 import com.back.together02be.trade.repository.TradeRepository
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component

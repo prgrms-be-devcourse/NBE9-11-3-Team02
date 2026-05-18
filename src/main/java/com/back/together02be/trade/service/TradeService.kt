@@ -8,7 +8,7 @@ import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.dto.response.TradeSellRes
 import com.back.together02be.trade.processor.TradeBuyProcessor
 import com.back.together02be.trade.processor.TradeSellProcessor
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.ObjectMapper
 import org.springframework.stereotype.Service
 
 @Service
