@@ -38,8 +38,7 @@ public class KisTokenService {
 
     private final KisAccessTokenRepository kisAccessTokenRepository;
 
-    // RestClient는 별도 Bean 없이 현재 구조 유지
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
 
     // 사용 가능한 토큰이 있으면 재사용, 없으면 새로 발급
     @Transactional
