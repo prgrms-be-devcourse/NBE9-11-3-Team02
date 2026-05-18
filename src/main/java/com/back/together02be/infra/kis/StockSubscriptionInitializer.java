@@ -65,7 +65,7 @@ public class StockSubscriptionInitializer {
 				// 웹소켓이 채운 값은 덮어쓰지 않음
 				rtStockPriceStore.putIfAbsent(
 					stock.getStockCode(),
-					RealtimeStockPrice.fromRest(stock.getStockCode(), restStock.output())
+					RealtimeStockPrice.fromRest(stock.getStockCode(), restStock.getOutput())
 				);
 				success++;
 
