@@ -60,7 +60,7 @@ class TradeSellProcessorTest {
 
     // 공통 Mocking 설정을 위한 Helper 메서드 (코드 중복 제거)
     private void mockCommonDependencies(Stock stock, UserStock userStock, UserAccount account) {
-        given(stockRepository.findById(any())).willReturn(Optional.of(stock));
+        given(stockRepository.findById(anyLong())).willReturn(Optional.of(stock));
 //        given(userStockRepository.findByUsersIdAndStockId(any(), any())).willReturn(Optional.of(userStock));
         // 두 인자 모두 Long 타입이라면 anyLong() 사용
         given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(Optional.of(userStock));
@@ -84,7 +84,7 @@ class TradeSellProcessorTest {
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1);
-        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account));
 
         TradeSellRes res = tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 10L, 50000L));
 
@@ -108,7 +108,7 @@ class TradeSellProcessorTest {
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1);
-        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account));
 
         tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 20L, 50000L));
 
