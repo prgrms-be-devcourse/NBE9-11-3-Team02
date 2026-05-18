@@ -10,15 +10,13 @@ import com.back.together02be.infra.kis.rest.dto.KisPriceRes;
 import com.back.together02be.infra.kis.rest.service.KisTokenService;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.repository.StockRepository;
+import com.back.together02be.support.ControllerTestSupport;
 import com.back.together02be.users.entity.Users;
 import com.back.together02be.users.repository.UsersRepository;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -33,10 +31,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@Transactional
-public class AssetControllerTest {
+
+public class AssetControllerTest extends ControllerTestSupport {
 
     @Autowired
     private MockMvc mockMvc;
