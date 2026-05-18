@@ -39,7 +39,7 @@ public class AchievementEventListener {
 
             // 1. 이미 달성한 업적인지 DB 확인 (중복 지급 방지)
             boolean alreadyAchieved = userAchievementRepository
-                    .existsByUsersIdAndAchievement_Code(event.userId(), targetCode);
+                    .existsByUsersIdAndAchievement_Code(event.getUserId(), targetCode);
 
             if (alreadyAchieved) {
                 continue;
@@ -58,13 +58,13 @@ public class AchievementEventListener {
                                         .build()
                         ));
 
-                Users user = usersRepository.getReferenceById(event.userId());
+                Users user = usersRepository.getReferenceById(event.getUserId());
 
                 UserAchievement newRecord = new UserAchievement(user, achievementMeta);
                 userAchievementRepository.save(newRecord);
 
                 log.info("업적 달성! 유저ID: {}, 업적명: {}",
-                        event.userId(), achievementMeta.getName());
+                        event.getUserId(), achievementMeta.getName());
 
                 // 필요하다면 여기서 프론트엔드로 알림(SSE, WebSocket) 전송
             }
