@@ -59,7 +59,7 @@ class KisPriceClient(
                 "&FID_INPUT_ISCD=$stockCode" +
                 "&FID_INPUT_DATE_1=${startDate.format(DateTimeFormatter.BASIC_ISO_DATE)}" +
                 "&FID_INPUT_DATE_2=${endDate.format(DateTimeFormatter.BASIC_ISO_DATE)}" +
-                "&FID_PERIOD_DIV_CODE=${period.getKisPeriodCode()}" +
+                "&FID_PERIOD_DIV_CODE=${period.kisPeriodCode}" +
                 "&FID_ORG_ADJ_PRC=0"
 
         val response = restClient.get()
