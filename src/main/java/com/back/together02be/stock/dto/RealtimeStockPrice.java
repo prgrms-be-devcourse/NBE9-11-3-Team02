@@ -5,15 +5,9 @@ import com.back.together02be.infra.kis.rest.dto.KisPriceRes;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-
 @Getter
 @Builder
-public class RealtimeStockPrice {
+public class RealtimeStockPrice { // todo stockSubscriptionInitializer 바꿀 때 변환
 	private String stockCode;      // 종목코드
 	private String price;          // 현재가
 	private String changeSign;     // 전일 대비 부호 (1:상한 2:상승 3:보합 4:하한 5:하락)
