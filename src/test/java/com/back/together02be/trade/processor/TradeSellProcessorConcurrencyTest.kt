@@ -70,8 +70,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         @BeforeAll
         fun beforeAll() {
             mockedValidator = mockStatic(MarketTimeValidator::class.java)
-            mockedValidator.`when`<Unit> { MarketTimeValidator.validateMarketOpen() }
-                .thenAnswer { }
+
         }
 
         @JvmStatic

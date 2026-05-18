@@ -64,8 +64,6 @@ class TradeControllerSellTest : ControllerTestSupport(){
     fun setUp(){
         mockedValidator.reset()
 
-        mockedValidator.`when`<Unit> { MarketTimeValidator.validateMarketOpen() }
-            .thenAnswer {}
 
         accessToken = JwtUtil.generateAccessToken(
             jwtSecret,
