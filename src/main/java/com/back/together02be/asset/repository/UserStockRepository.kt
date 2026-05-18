@@ -27,5 +27,4 @@ interface UserStockRepository : JpaRepository<UserStock, Long> {
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM UserStock u WHERE u.users.id = :userId AND u.stock.id = :stockId AND u.quantity = 0")
     fun deleteByUserAndStock(@Param("userId") userId: Long, @Param("stockId") stockId: Long)
-    // 리턴 타입이 void인 자바 메서드는 코틀린에서 반환 타입을 생략(Unit)합니다.
 }
