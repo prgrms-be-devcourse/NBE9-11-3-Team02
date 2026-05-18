@@ -21,12 +21,10 @@ public class Achievement extends BaseEntity {
     private String name; // 예: "첫 주주 등극"
 
     private String description; // 예: "생애 첫 주식 매수 성공"
-    private String reward;      // 예: "1,000 포인트"
 
-    public Achievement(String code, String name, String description, String reward) {
+    public Achievement(String code, String name, String description) {
         this.code = code;
         this.name = name;
         this.description = description;
-        this.reward = reward;
     }
 }

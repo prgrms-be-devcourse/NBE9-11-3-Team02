@@ -136,7 +136,6 @@ class BaseInitData(
                 .code("FIRST_TRADE")
                 .name("첫 주주 등극")
                 .description("생애 첫 주식 매수 성공")
-                .reward("1,000 포인트")
                 .build()
         )
 
@@ -145,7 +144,6 @@ class BaseInitData(
                 .code("BIG_SPENDER")
                 .name("모의투자 큰 손")
                 .description("누적 매수 금액 1,000만원 돌파")
-                .reward("10,000 포인트")
                 .build()
         )
 

@@ -39,7 +39,6 @@ public class AchievementService {
                         achievement.getCode(),
                         achievement.getName(),
                         achievement.getDescription(),
-                        achievement.getReward(),
                         userAchievedMap.containsKey(achievement.getCode()), // 달성 여부
                         userAchievedMap.containsKey(achievement.getCode()) ?
                                 userAchievedMap.get(achievement.getCode()).getCreatedAt() : null // 달성 시간

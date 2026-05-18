@@ -55,7 +55,6 @@ public class AchievementEventListener {
                                         .code(targetCode)
                                         .name(rule.getDefaultName()) // 인터페이스에서 가져옴
                                         .description(rule.getDefaultDescription())
-                                        .reward("기본 보상") // 또는 기본값 설정
                                         .build()
                         ));
 
@@ -64,8 +63,8 @@ public class AchievementEventListener {
                 UserAchievement newRecord = new UserAchievement(user, achievementMeta);
                 userAchievementRepository.save(newRecord);
 
-                log.info("업적 달성! 유저ID: {}, 업적명: {}, 보상: {}",
-                        event.userId(), achievementMeta.getName(), achievementMeta.getReward());
+                log.info("업적 달성! 유저ID: {}, 업적명: {}",
+                        event.userId(), achievementMeta.getName());
 
                 // 필요하다면 여기서 프론트엔드로 알림(SSE, WebSocket) 전송
             }
