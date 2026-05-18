@@ -113,13 +113,13 @@ public class TradeSellProcessor {
                 .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 계좌입니다."));
 
         //8. 거래 내역 저장
-        Trade trade = Trade.sell(account.getUsers(), stock, request.quantity(), price,profit);
+        Trade trade = Trade.sell(account.getUsers(), stock, request.getQuantity(), price,profit);
         tradeRepository.save(trade);
 
         return new TradeSellRes(
                 trade.getId(),
                 stock.getStockName(),
-                request.quantity(),
+                request.getQuantity(),
                 price,
                 amount,
                 account.getDeposit()
