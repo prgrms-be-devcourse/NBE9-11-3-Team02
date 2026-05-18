@@ -2,8 +2,9 @@ package com.back.together02be.infra.kis.rest;
 
 import com.back.together02be.chart.constant.ChartPeriod;
 import com.back.together02be.chart.dto.response.KisChartApiRes;
-import com.back.together02be.infra.kis.rest.service.KisTokenService;
 import com.back.together02be.infra.kis.rest.dto.KisPriceRes;
+import com.back.together02be.infra.kis.rest.service.KisTokenService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Component;
@@ -13,6 +14,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Component
+@RequiredArgsConstructor
 public class KisPriceClient {
 
     @Value("${kis.app-key}")
@@ -24,12 +26,9 @@ public class KisPriceClient {
     @Value("${kis.rest-base-url}")
     private String restBaseUrl;
 
-    private final RestClient restClient = RestClient.create();
+    private final RestClient restClient;
     private final KisTokenService kisTokenService;
 
-    public KisPriceClient(KisTokenService kisTokenService) {
-        this.kisTokenService = kisTokenService;
-    }
 
     // 현재 사용 가능한 access token 반환
     public String getAccessToken() {
