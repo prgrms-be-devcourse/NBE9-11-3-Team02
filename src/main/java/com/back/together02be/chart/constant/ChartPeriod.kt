@@ -14,7 +14,6 @@ enum class ChartPeriod(
         endDate.minusDays(lookbackDays.toLong())
 
     companion object {
-        @JvmStatic // todo @JvmStatic 제거
         fun from(value: String): ChartPeriod =
             entries.firstOrNull { it.value.equals(value, ignoreCase = true) }
                 ?: throw IllegalArgumentException("지원하지 않는 기간: $value")
