@@ -1,6 +1,5 @@
 package com.back.together02be.chart.scheduler
 
-import lombok.extern.slf4j.Slf4j
 import org.slf4j.LoggerFactory
 import org.springframework.cache.CacheManager
 import org.springframework.scheduling.annotation.Scheduled
@@ -9,7 +8,6 @@ import org.springframework.stereotype.Component
 private val log = LoggerFactory.getLogger(ChartCacheScheduler::class.java)
 
 @Component
-@Slf4j
 class ChartCacheScheduler (
     private val cacheManager: CacheManager
 ){
