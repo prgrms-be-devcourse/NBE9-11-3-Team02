@@ -1,10 +1,12 @@
 package com.back.together02be.trade.util
 
+import org.springframework.stereotype.Component
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
+@Component
 class MarketTimeValidator {
     fun validateMarketOpen() {
         val now = LocalDateTime.now(ZoneId.of("Asia/Seoul"))

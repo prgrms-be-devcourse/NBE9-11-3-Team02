@@ -27,7 +27,8 @@ class TradeSellProcessor(
     private val userAccountRepository: UserAccountRepository,
     private val userStockRepository: UserStockRepository,
     private val stockRepository: StockRepository,
-    private val tradeRepository: TradeRepository
+    private val tradeRepository: TradeRepository,
+    private val marketTimeValidator: MarketTimeValidator
 ) {
 
     companion object {
@@ -51,7 +52,7 @@ class TradeSellProcessor(
     @Transactional
     fun processSell(userId: Long, request: TradeSellReq): TradeSellRes {
         // 0. 장 마감 조회
-        MarketTimeValidator.validateMarketOpen()
+        marketTimeValidator.validateMarketOpen()
 
         // 1. 주식 정보 조회 및 보유 주식 조회
         val stock = stockRepository.findById(request.stockId)
