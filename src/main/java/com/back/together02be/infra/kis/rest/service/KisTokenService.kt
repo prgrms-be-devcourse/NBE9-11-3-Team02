@@ -100,7 +100,16 @@ class KisTokenService(
 
         val tokenEntity = kisAccessTokenRepository.findTopByOrderByIdDesc()
 
-        if (tokenEntity == null) {
+        return tokenEntity?.let {
+            it.update(
+                accessToken = validAccessToken,
+                tokenType = tokenResponse.tokenType ?: "Bearer",
+                expiresAt = expiresAt
+            )
+            kisAccessTokenRepository.save(it) // 메서드에 @Transactional이 있다면 지우셔도 됩니다 (Dirty Checking)
+            log.info("KIS 접근 토큰 갱신 및 저장 완료. expiresAt={}", expiresAt)
+            it.accessToken
+        } ?: run {
             val newToken = KisAccessToken(
                 accessToken = validAccessToken,
                 tokenType = tokenResponse.tokenType ?: "Bearer",
@@ -108,16 +117,7 @@ class KisTokenService(
             )
             kisAccessTokenRepository.save(newToken)
             log.info("KIS 접근 토큰 신규 발급 및 저장 완료. expiresAt={}", expiresAt)
-            return newToken.accessToken
-        } else {
-            tokenEntity.update(
-                accessToken = validAccessToken,
-                tokenType = tokenResponse.tokenType ?: "Bearer",
-                expiresAt = expiresAt
-            )
-            kisAccessTokenRepository.save(tokenEntity)
-            log.info("KIS 접근 토큰 갱신 및 저장 완료. expiresAt={}", expiresAt)
-            return tokenEntity.accessToken
+            newToken.accessToken
         }
     }
 
