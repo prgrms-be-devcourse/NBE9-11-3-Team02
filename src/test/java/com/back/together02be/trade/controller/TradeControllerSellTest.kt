@@ -49,6 +49,12 @@ class TradeControllerSellTest : ControllerTestSupport(){
         @BeforeAll
         fun beforeAll() {
             mockedValidator = mockStatic(MarketTimeValidator::class.java)
+
+            mockedValidator
+                .`when`<Unit> {
+                    MarketTimeValidator.validateMarketOpen()
+                }
+                .then { }
         }
 
         @JvmStatic
@@ -62,9 +68,6 @@ class TradeControllerSellTest : ControllerTestSupport(){
 
     @BeforeEach
     fun setUp(){
-        mockedValidator.reset()
-
-
         accessToken = JwtUtil.generateAccessToken(
             jwtSecret,
             60 * 60,
@@ -171,7 +174,7 @@ class TradeControllerSellTest : ControllerTestSupport(){
         val deleted = userStockRepository.findByUsersIdAndStockId(1L, 1L)
         val userAccount = userAccountRepository.findByUsersId(1L).orElseThrow()
 
-        assertThat(deleted).isEmpty
+        assertThat(deleted).isEmpty()
         assertThat(userAccount.deposit).isEqualTo(1750000L)
         assertThat(userAccount.totalPurchase).isEqualTo(0L)
     }
