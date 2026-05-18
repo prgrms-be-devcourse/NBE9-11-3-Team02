@@ -104,7 +104,7 @@ public class TradeSellProcessor {
         }
 
         //7. 수량 차감 및 전량 매도시 삭제
-        if(userStock.getQuantity().equals(request.quantity())) {
+        if(userStock.getQuantity()==request.quantity()) {
             userStockRepository.deleteByUserAndStock(userId, request.stockId());
         }
 
