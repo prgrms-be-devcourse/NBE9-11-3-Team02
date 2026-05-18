@@ -12,6 +12,8 @@ import java.io.IOException
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
+private val log = LoggerFactory.getLogger(StockService::class.java)
+
 @Service
 class StockService(
     private val stockRepository: StockRepository,
@@ -21,7 +23,6 @@ class StockService(
 ) {
 
     companion object {
-        private val log = LoggerFactory.getLogger(StockService::class.java)
         private const val LIST_SSE_INTERVAL_MS: Long = 1500 //전체 종목 시세 갱신 주기
         private const val SSE_INTERVAL_MS: Long = 500 // 상세 종목 시세 갱신 주기
     }
