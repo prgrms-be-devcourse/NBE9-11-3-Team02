@@ -1,16 +1,19 @@
 package com.back.together02be.achievement;
 
+import com.back.together02be.achievement.event.TradeCompletedEvent;
+import com.back.together02be.achievement.repository.UserAchievementRepository;
+import com.back.together02be.support.IntegrationTestSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 
-import com.back.together02be.achievement.event.TradeCompletedEvent;
-import com.back.together02be.support.IntegrationTestSupport;
-
 public class AchievementTest extends IntegrationTestSupport {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private UserAchievementRepository userAchievementRepository;
 
     @Test
     @DisplayName("전략 패턴과 EasyRules 동작 동시 확인 테스트")
