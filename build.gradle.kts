@@ -1,9 +1,10 @@
 plugins {
     kotlin("jvm") version "2.3.20"
-    kotlin("plugin.spring") version "2.1.20"
-    kotlin("plugin.jpa") version "2.1.20"
+    kotlin("plugin.jpa") version "2.3.20"
+    kotlin("plugin.spring") version "2.3.20"
     id("org.springframework.boot") version "4.0.5"
     id("io.spring.dependency-management") version "1.1.7"
+    kotlin("plugin.lombok") version "2.3.20"    // lombok
 }
 
 group = "com.back"
@@ -18,7 +19,7 @@ java {
 
 kotlin {
     compilerOptions {
-        freeCompilerArgs.addAll("-Xjsr305=strict") // null-safety 강화
+        freeCompilerArgs.addAll("-Xjsr305=strict")
     }
 }
 
@@ -56,6 +57,18 @@ dependencies {
 
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+}
+
+kotlin {
+    compilerOptions {
+        freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
+    }
+}
+
+allOpen {
+    annotation("jakarta.persistence.Entity")
+    annotation("jakarta.persistence.MappedSuperclass")
+    annotation("jakarta.persistence.Embeddable")
 }
 
 tasks.withType<Test> {
