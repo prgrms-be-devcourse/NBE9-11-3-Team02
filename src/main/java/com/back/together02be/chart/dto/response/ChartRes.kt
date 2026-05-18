@@ -4,7 +4,6 @@ import com.back.together02be.chart.constant.ChartPeriod
 import com.back.together02be.chart.dto.Candle
 
 
-@JvmRecord // todo @JvmRecord 제거
 data class ChartRes(
     val stockCode: String,
     val name: String,
@@ -15,7 +14,6 @@ data class ChartRes(
 
     companion object {
 
-        @JvmStatic // todo @JvmStatic 제거
         fun of(
             stockCode: String,
             name: String,
