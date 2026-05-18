@@ -1,11 +1,14 @@
 package com.back.together02be.asset.service;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
-import java.util.List;
-
+import com.back.together02be.asset.dto.response.UserStockRes;
+import com.back.together02be.asset.entity.UserStock;
+import com.back.together02be.asset.repository.UserAccountRepository;
+import com.back.together02be.asset.repository.UserStockRepository;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.entity.Stock;
+import com.back.together02be.stock.entity.StockMarket;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+import com.back.together02be.users.entity.Users;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,20 +16,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.back.together02be.asset.dto.response.UserStockRes;
-import com.back.together02be.asset.entity.UserStock;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.stock.entity.StockMarket;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import com.back.together02be.users.entity.Users;
+import java.util.List;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AssetServiceTest {
 
     @Mock UserStockRepository userStockRepository;
     @Mock RealTimeStockPriceStore realTimeStockPriceStore;
+    @Mock private UserAccountRepository userAccountRepository;
+    @Mock private UserStockSseService userStockSseService;
 
     @InjectMocks AssetService assetService;
 

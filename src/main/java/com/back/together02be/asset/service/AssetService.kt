@@ -38,7 +38,7 @@ class AssetService(
         return userStocks.map { userStock ->
             val stockCode = userStock.stock.stockCode
 
-            // Safe Call(?.)과 Elvis Operator(?:), 그리고 안전한 형변환(toLongOrNull) 결합
+            // 안전 호출(?.)과 엘비스 연산자(?:), 그리고 안전한 형변환(toLongOrNull) 활용
             val currentPrice = realTimeStockPriceStore.get(stockCode)
                 ?.price
                 ?.toLongOrNull() ?: 0L
@@ -67,7 +67,7 @@ class AssetService(
 
         val emitter = userStockSseService.createEmitter()
 
-        // 💡 만약 보유 주식이 없다면, 503 에러를 막기 위해 연결 더미 데이터만 보내고 유지합니다.
+        // 보유 데이터 없을 시, 503 에러를 막기 위해 연결 더미 데이터만 보내고 유지
         if (stockCodes.isEmpty()) {
             try {
                 emitter.send(SseEmitter.event().name("CONNECT").data("no_stocks"))
@@ -88,7 +88,7 @@ class AssetService(
         emitter.onTimeout(onCompletion)
         emitter.onError { onCompletion.run() }
 
-        // 💡 503 에러 방지용 첫 이벤트 전송
+        // 503 에러 방지용 첫 이벤트 전송
         try {
             emitter.send(SseEmitter.event().name("CONNECT").data("connected"))
         } catch (e: IOException) {
