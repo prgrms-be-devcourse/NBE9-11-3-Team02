@@ -88,7 +88,7 @@ class TradeBuyProcessor(
         eventPublisher.publishEvent(TradeCompletedEvent(userId, amount, account.totalPurchase))
 
         val result = BuyRes(
-            tradeId = trade.id,
+            tradeId = trade.id!!,
             stockName = stock.stockName,
             quantity = request.quantity,
             price = price,
