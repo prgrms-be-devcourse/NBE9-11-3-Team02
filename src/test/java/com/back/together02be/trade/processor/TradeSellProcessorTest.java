@@ -4,8 +4,6 @@ import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.entity.UserStock;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.stock.entity.StockMarket;
-import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.stock.dto.RealtimeStockPrice;
 import com.back.together02be.stock.entity.Stock;
 import com.back.together02be.stock.entity.StockMarket;
@@ -14,7 +12,6 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore;
 import com.back.together02be.trade.dto.request.TradeSellReq;
 import com.back.together02be.trade.dto.response.TradeSellRes;
 import com.back.together02be.trade.repository.TradeRepository;
-import com.back.together02be.users.entity.Users;
 import com.back.together02be.trade.util.MarketTimeValidator;
 import com.back.together02be.users.entity.Users;
 import org.junit.jupiter.api.AfterEach;
@@ -86,7 +83,7 @@ class TradeSellProcessorTest {
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
-        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
         TradeSellRes res = tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 10L, 50000L));
@@ -110,12 +107,12 @@ class TradeSellProcessorTest {
         given(stockPriceStore.get(stock.getStockCode())).willReturn(
                 RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build());
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1);
-        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1);
+        given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1);
         given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account));
 
         tradeSellProcessor.processSell(1L, new TradeSellReq(1L, 10L, 20L, 50000L));
 
-        verify(userStockRepository).deleteByUserAndStock(1L, 10L);
+        verify(userStockRepository).deleteByUserAndStock(eq(1L), eq(10L));
     }
 
     // t3: 실패 - 가격 변동폭 초과
