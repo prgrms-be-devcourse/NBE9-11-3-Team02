@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.*
+import org.mockito.BDDMockito.given
 import org.mockito.invocation.InvocationOnMock
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.stubbing.Answer
@@ -17,7 +18,6 @@ import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.IOException
 import java.util.*
-import java.util.List
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -209,23 +209,23 @@ internal class StockServiceTest {
         // given
         val stock = Stock("005930", "삼성전자", StockMarket.KOSPI)
         ReflectionTestUtils.setField(stock, "id", 1L)
-        BDDMockito.given<MutableList<Stock>>(stockRepository.findAll()).willReturn(List.of<Stock>(stock))
+        given(stockRepository.findAll()).willReturn(listOf(stock))
 
         val price = RealtimeStockPrice.builder()
             .stockCode("005930")
             .price("70000")
             .changeRate("2.19")
             .build()
-        BDDMockito.given(rtStockPriceStore.get("005930")).willReturn(price)
+        given(rtStockPriceStore.get("005930")).willReturn(price)
 
         // when
         val result = stockService.getStocks()
 
         // then
         Assertions.assertThat(result).hasSize(1)
-        Assertions.assertThat(result.get(0).stockCode).isEqualTo("005930")
-        Assertions.assertThat(result.get(0).currentPrice).isEqualTo(70000L)
-        Assertions.assertThat(result.get(0).changeRate).isEqualTo(2.19)
+        Assertions.assertThat(result[0].stockCode).isEqualTo("005930")
+        Assertions.assertThat(result[0].currentPrice).isEqualTo(70000L)
+        Assertions.assertThat(result[0].changeRate).isEqualTo(2.19)
     }
 
     @Test
@@ -237,23 +237,22 @@ internal class StockServiceTest {
         val stock2 = Stock("035420", "NAVER", StockMarket.KOSPI)
         ReflectionTestUtils.setField(stock2, "id", 3L)
 
-        BDDMockito.given<MutableList<Stock>>(stockRepository.findAll()).willReturn(List.of<Stock>(stock1, stock2))
-
-        BDDMockito.given(rtStockPriceStore.get("000660")).willReturn(null) // 캐시 없음
+        given(stockRepository.findAll()).willReturn(listOf(stock1, stock2))
+        given(rtStockPriceStore.get("000660")).willReturn(null) // 캐시 없음
 
         val badPrice = RealtimeStockPrice.builder()
             .stockCode("035420").price("abc").changeRate("rate").build()
-        BDDMockito.given(rtStockPriceStore.get("035420")).willReturn(badPrice) // 숫자 파싱 실패
+        given(rtStockPriceStore.get("035420")).willReturn(badPrice) // 숫자 파싱 실패
 
         // when
         val result = stockService.getStocks()
 
         // then
         Assertions.assertThat(result).hasSize(2)
-        Assertions.assertThat(result.get(0).currentPrice).isNull()
-        Assertions.assertThat(result.get(0).changeRate).isNull()
-        Assertions.assertThat(result.get(1).currentPrice).isNull()
-        Assertions.assertThat(result.get(1).changeRate).isNull()
+        Assertions.assertThat(result[0].currentPrice).isNull()
+        Assertions.assertThat(result[0].changeRate).isNull()
+        Assertions.assertThat(result[1].currentPrice).isNull()
+        Assertions.assertThat(result[1].changeRate).isNull()
     }
 
     @Test
