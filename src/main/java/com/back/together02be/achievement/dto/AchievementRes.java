@@ -6,7 +6,6 @@ public record AchievementRes(
         String code,
         String name,
         String description,
-        String reward,
         boolean isAchieved,
         LocalDateTime achievedAt
 ) {}
