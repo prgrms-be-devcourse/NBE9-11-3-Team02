@@ -12,17 +12,17 @@ import lombok.NoArgsConstructor
 class UserStock(
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "users_id", nullable = false)
-    val users: Users, // 소유자는 변경되지 않으므로 val
+    val users: Users,
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "stock_id")
     val stock: Stock, // 보유한 주식 종목 자체는 변경되지 않으므로 val
 
     @Column(nullable = false)
-    var quantity: Long, // 수량은 매수/매도 시 변경되므로 var
+    var quantity: Long,
 
     @Column(nullable = false)
-    var averagePrice: Long // 평균 단가는 매수 시 변경되므로 var
+    var averagePrice: Long
 ) : BaseEntity() {
 
     // 매수 시 수량 증가 + 평균매입가 재계산
@@ -33,7 +33,6 @@ class UserStock(
     }
 
     fun updateQuantity(newQuantity: Long) {
-        // if 문과 throw IllegalArgumentException 대신 코틀린의 require 함수 사용
         require(newQuantity >= 0) { "보유 수량은 0보다 작을 수 없습니다." }
         this.quantity = newQuantity
     }
