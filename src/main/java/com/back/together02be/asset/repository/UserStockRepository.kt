@@ -1,31 +1,31 @@
-package com.back.together02be.asset.repository;
+package com.back.together02be.asset.repository
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import com.back.together02be.asset.entity.UserAccount;
-import com.back.together02be.asset.entity.UserStock;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import com.back.together02be.asset.entity.UserStock
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.data.jpa.repository.Modifying
+import org.springframework.data.jpa.repository.Query
+import org.springframework.data.repository.query.Param
+import java.util.*
 
-import java.util.List;
-import java.util.Optional;
+interface UserStockRepository : JpaRepository<UserStock, Long> {
 
-public interface UserStockRepository extends JpaRepository<UserStock, Long> {
-	Optional<UserStock> findByUsersIdAndStockId(Long usersId, Long stockId);
-    List<UserStock> findAllByUsersId(Long users_id);
+    fun findByUsersIdAndStockId(usersId: Long, stockId: Long): Optional<UserStock>
 
-    // 더티 체킹을 사용하지 않으므로, 연산 후 영속성 컨텍스트를 비워줘야 최신 데이터가 반영됩니다.
+    fun findAllByUsersId(users_id: Long): List<UserStock>
+
     @Modifying(clearAutomatically = true)
-    @Query("UPDATE UserStock u SET u.quantity = u.quantity - :sellQuantity " +
-            "WHERE u.users.id = :userId AND u.stock.id = :stockId AND u.quantity >= :sellQuantity")
-    int updateQuantity(@Param("userId") Long userId,
-                       @Param("stockId") Long stockId,
-                       @Param("sellQuantity") Long sellQuantity);
-    //delete도 동시성 제어를 위해 사용
+    @Query(
+        "UPDATE UserStock u SET u.quantity = u.quantity - :sellQuantity " +
+                "WHERE u.users.id = :userId AND u.stock.id = :stockId AND u.quantity >= :sellQuantity"
+    )
+    fun updateQuantity(
+        @Param("userId") userId: Long,
+        @Param("stockId") stockId: Long,
+        @Param("sellQuantity") sellQuantity: Long
+    ): Int
+
     @Modifying(clearAutomatically = true)
     @Query("DELETE FROM UserStock u WHERE u.users.id = :userId AND u.stock.id = :stockId AND u.quantity = 0")
-    void deleteByUserAndStock(@Param("userId") Long userId, @Param("stockId") Long stockId);
-
-    //void delete(UserStock userStock);
+    fun deleteByUserAndStock(@Param("userId") userId: Long, @Param("stockId") stockId: Long)
+    // 리턴 타입이 void인 자바 메서드는 코틀린에서 반환 타입을 생략(Unit)합니다.
 }
