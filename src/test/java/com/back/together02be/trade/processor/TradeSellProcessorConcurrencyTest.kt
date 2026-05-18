@@ -11,14 +11,13 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.IntegrationTestSupport
 import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.repository.TradeRepository
-import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import com.back.together02be.users.repository.UsersRepository
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
-import org.mockito.MockedStatic
-import org.mockito.Mockito
-import org.mockito.Mockito.mockStatic
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
@@ -65,31 +64,6 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
     private val INITIAL_DEPOSIT = 1_000_000L
     private val STOCK_PRICE = 10_000L
 
-    companion object {
-        private lateinit var mockedValidator: MockedStatic<MarketTimeValidator>
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            mockedValidator =
-                Mockito.mockStatic(
-                    MarketTimeValidator::class.java
-                )
-
-            mockedValidator.`when`<Unit> {
-                MarketTimeValidator.validateMarketOpen()
-            }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            if (::mockedValidator.isInitialized) {
-                mockedValidator.close()
-            }
-        }
-    }
-
     @BeforeEach
     fun setUp() {
         val stock = stockRepository.findByStockCode("005930")
@@ -106,7 +80,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         val userStock = UserStock(user, stock, INITIAL_QUANTITY, STOCK_PRICE)
         userStockRepository.saveAndFlush(userStock)
 
-        val currentTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        val currentTime = LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss"))
         val realtimePrice = RealtimeStockPrice.builder()
             .stockCode("005930")
             .price(STOCK_PRICE.toString())

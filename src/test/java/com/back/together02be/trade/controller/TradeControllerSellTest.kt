@@ -8,12 +8,11 @@ import com.back.together02be.global.util.JwtUtil
 import com.back.together02be.stock.dto.RealtimeStockPrice
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.ControllerTestSupport
-import com.back.together02be.trade.util.MarketTimeValidator
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.*
-import org.mockito.MockedStatic
-import org.mockito.Mockito.mockStatic
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
@@ -41,28 +40,6 @@ class TradeControllerSellTest : ControllerTestSupport(){
     private lateinit var jwtSecret: String
 
     private lateinit var accessToken: String
-
-    companion object {
-        private lateinit var mockedValidator: MockedStatic<MarketTimeValidator>
-
-        @JvmStatic
-        @BeforeAll
-        fun beforeAll() {
-            mockedValidator = mockStatic(MarketTimeValidator::class.java)
-
-            mockedValidator.`when`<Unit> {
-                MarketTimeValidator.validateMarketOpen()
-            }
-        }
-
-        @JvmStatic
-        @AfterAll
-        fun afterAll() {
-            if(::mockedValidator.isInitialized) {
-                mockedValidator.close()
-            }
-        }
-    }
 
     @BeforeEach
     fun setUp(){
@@ -99,7 +76,7 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .changeSign("1")
             .change("1")
             .changeRate("3")
-            .tradeTime(LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss")))
+            .tradeTime(LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss")))
             .build()
         realtimeStockPriceService.put("005930", samsungPrice)
     }
