@@ -1,65 +1,55 @@
-package com.back.together02be.asset.service;
+package com.back.together02be.asset.service
 
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.back.together02be.stock.dto.RealtimeStockPrice
+import com.back.together02be.stock.service.RealTimeStockPriceStore
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
-public class UserStockSseService {
-    private final Map<String, List<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
+class UserStockSseService(
+    private val priceStore: RealTimeStockPriceStore // 생성자 주입
+) {
+    // Lombok의 @Slf4j를 대체하는 표준 로거 선언
+    private val log = LoggerFactory.getLogger(UserStockSseService::class.java)
 
-    public SseEmitter createEmitter() {
-        return new SseEmitter(10 * 60 * 1000L);
+    private val emittersMap = ConcurrentHashMap<String, MutableList<SseEmitter>>()
+
+    fun createEmitter(): SseEmitter {
+        return SseEmitter(10 * 60 * 1000L)
     }
 
-    public void addEmitter(String stockCode, SseEmitter emitter) {
-        emittersMap.computeIfAbsent(stockCode, k -> new CopyOnWriteArrayList<>()).add(emitter);
+    fun addEmitter(stockCode: String, emitter: SseEmitter) {
+        emittersMap.computeIfAbsent(stockCode) { CopyOnWriteArrayList() }.add(emitter)
     }
 
-    public void removeEmitter(String stockCode, SseEmitter emitter) {
-        List<SseEmitter> emitters = emittersMap.get(stockCode);
-        if (emitters != null) emitters.remove(emitter);
+    fun removeEmitter(stockCode: String, emitter: SseEmitter) {
+        // Kotlin의 Null 안전 호출 연산자(?.)를 사용하여 간결하게 처리
+        emittersMap[stockCode]?.remove(emitter)
     }
-
-    // 캐시에서 현재가를 가져오기 위해 주입
-    private final RealTimeStockPriceStore priceStore;
-
-
 
     // 💡 핵심 로직: 1.5초마다 현재 구독 중인 종목들의 시세만 꺼내서 구독자들에게 전송
     @Scheduled(fixedRate = 1500)
-    public void broadcastOwnedStocks() {
-        if (emittersMap.isEmpty()) return;
+    fun broadcastOwnedStocks() {
+        if (emittersMap.isEmpty()) return
 
         // 현재 누군가 화면에서 보고 있는(구독 중인) 종목 코드들만 순회
-        emittersMap.forEach((stockCode, emitters) -> {
-            if (emitters.isEmpty()) return;
+        emittersMap.forEach { (stockCode, emitters) ->
+            if (emitters.isEmpty()) return@forEach // Kotlin forEach 람다 내에서는 continue 대신 return@레이블 사용
 
-            // 저장소에서 해당 종목의 최신 가격 조회
-            RealtimeStockPrice currentPrice = priceStore.get(stockCode);
-
-            if (currentPrice != null) {
-
-                // 해당 종목을 보유한(구독 중인) 모든 유저에게 한 번에 전송
-                emitters.forEach(emitter -> {
+            priceStore.get(stockCode)?.let { currentPrice ->
+                emitters.forEach { emitter ->
                     try {
-                        emitter.send(SseEmitter.event().name("priceUpdate").data(currentPrice));
-                    } catch (Exception e) {
-                        removeEmitter(stockCode, emitter);
+                        emitter.send(SseEmitter.event().name("priceUpdate").data(currentPrice))
+                    } catch (e: Exception) {
+                        log.warn("SSE 전송 실패. Emitter를 제거합니다. 종목코드: {}, 에러: {}", stockCode, e.message)
+                        removeEmitter(stockCode, emitter)
                     }
-                });
+                }
             }
-        });
+        }
     }
 }

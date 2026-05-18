@@ -1,110 +1,100 @@
-package com.back.together02be.asset.service;
+package com.back.together02be.asset.service
 
-import com.back.together02be.asset.dto.response.StockInfoRes;
-import com.back.together02be.asset.dto.response.UserStockRes;
-import com.back.together02be.asset.entity.UserAccount;
-import com.back.together02be.asset.entity.UserStock;
-import com.back.together02be.asset.repository.UserAccountRepository;
-import com.back.together02be.asset.repository.UserStockRepository;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.back.together02be.asset.dto.response.StockInfoRes
+import com.back.together02be.asset.dto.response.UserStockRes
+import com.back.together02be.asset.entity.UserStock
+import com.back.together02be.asset.repository.UserAccountRepository
+import com.back.together02be.asset.repository.UserStockRepository
+import com.back.together02be.stock.service.RealTimeStockPriceStore
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
+import java.io.IOException
 
 @Service
-@RequiredArgsConstructor
-@Slf4j
-public class AssetService {
-    private final UserAccountRepository userAccountRepository;
-    private final UserStockRepository userStockRepository;
-    private final RealTimeStockPriceStore realTimeStockPriceStore;
-    private final UserStockSseService userStockSseService;
+class AssetService(
+    private val userAccountRepository: UserAccountRepository,
+    private val userStockRepository: UserStockRepository,
+    private val realTimeStockPriceStore: RealTimeStockPriceStore,
+    private val userStockSseService: UserStockSseService
+) {
+    private val log = LoggerFactory.getLogger(javaClass)
 
-    //예수금 조회 메서드
-    public long getDeposit(Long userId){
-        UserAccount userAccount = userAccountRepository.findByUsersId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("계좌 없음"));
-        return userAccount.getDeposit();
+    // 예수금 조회 메서드
+    fun getDeposit(userId: Long): Long {
+        val userAccount = userAccountRepository.findByUsersId(userId)
+            .orElseThrow { IllegalArgumentException("계좌 없음") }
+        return userAccount.deposit
     }
 
     // 보유 종목 조회 메서드
-    public List<UserStockRes> getUserStocks(Long userId) {
-        //보유 주식 목록 조회
-        List<UserStock> userStocks = userStockRepository.findAllByUsersId(userId);
-        return getUserStocksRealtimePrice(userStocks);
+    fun getUserStocks(userId: Long): List<UserStockRes> {
+        val userStocks = userStockRepository.findAllByUsersId(userId)
+        return getUserStocksRealtimePrice(userStocks)
     }
 
     // 유저 보유 종목 현재 시세 조회
-    public List<UserStockRes> getUserStocksRealtimePrice(List<UserStock> userStocks) {
+    fun getUserStocksRealtimePrice(userStocks: List<UserStock>): List<UserStockRes> {
+        return userStocks.map { userStock ->
+            val stockCode = userStock.stock.stockCode
 
-        return userStocks.stream().map(userStock -> {
-            String stockCode = userStock.getStock().getStockCode();
-            // RealTimeStockPriceStore의 get 메서드를 사용하여 실시간 시세 조회
-            RealtimeStockPrice realtimeStockPrice = realTimeStockPriceStore.get(stockCode);
+            // Safe Call(?.)과 Elvis Operator(?:), 그리고 안전한 형변환(toLongOrNull) 결합
+            val currentPrice = realTimeStockPriceStore.get(stockCode)
+                ?.price
+                ?.toLongOrNull() ?: 0L
 
-            // Map에 아직 데이터가 적재되지 않아 null을 반환할 경우를 대비한 방어 로직
-            Long currentPrice = (realtimeStockPrice != null) ? Long.parseLong(realtimeStockPrice.getPrice()) : 0L;
-
-
-            return UserStockRes.from(userStock, currentPrice);
-        }).collect(Collectors.toList());
+            UserStockRes.from(userStock, currentPrice)
+        }
     }
-    public long getTotalAmountByUserId(long userId){
+
+    // 총 매수 금액 조회 메서드
+    fun getTotalAmountByUserId(userId: Long): Long {
         return userAccountRepository.findByUsersId(userId)
-                .orElseThrow(()->new RuntimeException("계좌 없음"))
-                .getTotalPurchase();
+            .orElseThrow { RuntimeException("계좌 없음") }
+            .totalPurchase
     }
-    public List<StockInfoRes> getStockInfo(long userId){
-        List<UserStock> userStocks = userStockRepository.findAllByUsersId(userId);
 
-        List<StockInfoRes> stockInfos = userStocks.stream()
-                .map(us->new StockInfoRes(us.getStock().getStockCode(),us.getQuantity()))
-                .toList();
-
-        return stockInfos;
+    // 보유 주식 정보(종목코드, 수량) 조회
+    fun getStockInfo(userId: Long): List<StockInfoRes> {
+        return userStockRepository.findAllByUsersId(userId)
+            .map { StockInfoRes(it.stock.stockCode, it.quantity) } // 암시적 변수 it 사용
     }
 
     // SSE 다중 종목 구독
-    public SseEmitter subscribeToUserStocks(Long userId) {
-        List<UserStock> userStocks = userStockRepository.findAllByUsersId(userId);
-        List<String> stockCodes = userStocks.stream().map(s->s.getStock().getStockCode()).toList();
+    fun subscribeToUserStocks(userId: Long): SseEmitter {
+        val userStocks = userStockRepository.findAllByUsersId(userId)
+        val stockCodes = userStocks.map { it.stock.stockCode }
 
-        SseEmitter emitter = userStockSseService.createEmitter();
+        val emitter = userStockSseService.createEmitter()
 
         // 💡 만약 보유 주식이 없다면, 503 에러를 막기 위해 연결 더미 데이터만 보내고 유지합니다.
         if (stockCodes.isEmpty()) {
             try {
-                emitter.send(SseEmitter.event().name("CONNECT").data("no_stocks"));
-            } catch (IOException e) {
-                emitter.completeWithError(e);
+                emitter.send(SseEmitter.event().name("CONNECT").data("no_stocks"))
+            } catch (e: IOException) {
+                emitter.completeWithError(e)
             }
-            return emitter;
+            return emitter
         }
 
-        stockCodes.forEach(code -> userStockSseService.addEmitter(code, emitter));
+        stockCodes.forEach { code -> userStockSseService.addEmitter(code, emitter) }
 
-        Runnable onCompletion = () -> {
-            stockCodes.forEach(code -> userStockSseService.removeEmitter(code, emitter));
-        };
+        // 코틀린에서 Runnable 인터페이스 람다 구현
+        val onCompletion = Runnable {
+            stockCodes.forEach { code -> userStockSseService.removeEmitter(code, emitter) }
+        }
 
-        emitter.onCompletion(onCompletion);
-        emitter.onTimeout(onCompletion);
-        emitter.onError((e) -> onCompletion.run());
+        emitter.onCompletion(onCompletion)
+        emitter.onTimeout(onCompletion)
+        emitter.onError { onCompletion.run() }
 
         // 💡 503 에러 방지용 첫 이벤트 전송
         try {
-            emitter.send(SseEmitter.event().name("CONNECT").data("connected"));
-        } catch (IOException e) {
-            emitter.completeWithError(e);
+            emitter.send(SseEmitter.event().name("CONNECT").data("connected"))
+        } catch (e: IOException) {
+            emitter.completeWithError(e)
         }
 
-        return emitter;
+        return emitter
     }
 }
