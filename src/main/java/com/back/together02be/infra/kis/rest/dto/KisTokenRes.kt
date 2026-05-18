@@ -13,5 +13,5 @@ data class KisTokenRes(
     val tokenType: String,
 
     @JsonProperty("expires_in")
-    val expiresIn: Int?
+    val expiresIn: Int
 )

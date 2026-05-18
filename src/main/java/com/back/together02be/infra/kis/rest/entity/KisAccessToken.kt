@@ -13,7 +13,8 @@ class KisAccessToken(
 ) {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    val id: Long? = null
+    var id: Long? = null
+        protected set
 
     // 클래스 내부 바디에서 프로퍼티를 선언하고 protected set을 걸어줍니다.
     @Column(nullable = false, length = 2000)
@@ -34,6 +35,7 @@ class KisAccessToken(
         this.expiresAt = expiresAt
     }
 
+    @get:Transient
     val isUsable: Boolean
         get() = expiresAt.isAfter(LocalDateTime.now().plusMinutes(1))
 }
