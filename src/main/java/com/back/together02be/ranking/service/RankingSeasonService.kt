@@ -36,8 +36,6 @@ class RankingSeasonService(
     fun closeSeason(endDate: LocalDate) {
         val activeSeasons = rankingSeasonRepository.findByActiveTrue()
 
-        // Kotlin 전환 포인트:
-        // Java의 for (Type item : list) 대신 Kotlin의 for (item in list) 또는 .forEach {} 를 사용한다.
         activeSeasons.forEach { season ->
             season.close(endDate)
         }
