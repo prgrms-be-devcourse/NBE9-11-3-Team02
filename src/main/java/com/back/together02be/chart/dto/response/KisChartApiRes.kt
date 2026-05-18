@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JvmRecord
 data class KisChartApiRes(
 	@JsonProperty("rt_cd")   val rtCd: String, // "0"이면 성공
-	@JsonProperty("msg1")    val msg1: String, // 에러 메시지
+	@JsonProperty("msg1")    val msg1: String?, // 에러 메시지
 	@JsonProperty("output1") val output1: Output1,
 	@JsonProperty("output2") val output2: List<Output2>
 ) {
