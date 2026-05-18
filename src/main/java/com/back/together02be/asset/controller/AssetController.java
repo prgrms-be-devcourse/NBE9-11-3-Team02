@@ -1,7 +1,9 @@
 package com.back.together02be.asset.controller;
 
-import com.back.together02be.asset.dto.response.StockInfoRes;
+//import com.back.together02be.asset.dto.response.StockInfoRes;
+//import com.back.together02be.asset.dto.response.TotalPurchaseRes;
 import com.back.together02be.asset.dto.response.TotalPurchaseRes;
+import com.back.together02be.asset.dto.response.StockInfoRes;
 import com.back.together02be.asset.dto.response.UserStockRes;
 import com.back.together02be.asset.service.AssetService;
 import com.back.together02be.global.apiRes.ApiRes;
