@@ -8,7 +8,6 @@ data class StockPriceRes(
 	val stockName: String
 ) {
     companion object {
-        @JvmStatic
 		fun from(stock: Stock): StockPriceRes {
             return StockPriceRes(
                 stock.id,
