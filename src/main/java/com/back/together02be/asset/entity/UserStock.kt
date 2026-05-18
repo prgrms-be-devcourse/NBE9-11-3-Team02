@@ -1,57 +1,40 @@
-package com.back.together02be.asset.entity;
+package com.back.together02be.asset.entity
 
-import com.back.together02be.global.entity.BaseEntity;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.users.entity.Users;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import com.back.together02be.global.entity.BaseEntity
+import com.back.together02be.stock.entity.Stock
+import com.back.together02be.users.entity.Users
+import jakarta.persistence.*
+import lombok.Getter
+import lombok.NoArgsConstructor
 
 @Entity
-@Getter
-@NoArgsConstructor
-@Table(uniqueConstraints = @UniqueConstraint(columnNames = {"users_id", "stock_id"}))
-public class UserStock extends BaseEntity {
+@Table(uniqueConstraints = [UniqueConstraint(columnNames = ["users_id", "stock_id"])])
+class UserStock(
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "users_id", nullable = false)
+    val users: Users, // 소유자는 변경되지 않으므로 val
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "users_id", nullable = false)
-	private Users users;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id")
+    val stock: Stock, // 보유한 주식 종목 자체는 변경되지 않으므로 val
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "stock_id")
-	private Stock stock;
+    @Column(nullable = false)
+    var quantity: Long, // 수량은 매수/매도 시 변경되므로 var
 
-	@Column(nullable = false)
-	private Long quantity;
+    @Column(nullable = false)
+    var averagePrice: Long // 평균 단가는 매수 시 변경되므로 var
+) : BaseEntity() {
 
-	@Column(nullable = false)
-	private Long averagePrice;
+    // 매수 시 수량 증가 + 평균매입가 재계산
+    fun updateOnBuy(buyQuantity: Long, buyPrice: Long) {
+        val newTotalCost = (this.quantity * this.averagePrice) + (buyQuantity * buyPrice)
+        this.quantity += buyQuantity
+        this.averagePrice = newTotalCost / this.quantity
+    }
 
-	public UserStock(Users users, Stock stock, Long quantity, Long averagePrice) {
-		this.users = users;
-		this.stock = stock;
-		this.quantity = quantity;
-		this.averagePrice = averagePrice;
-	}
-
-	// 매수 시 수량 증가 + 평균매입가 재계산
-	public void updateOnBuy(Long buyQuantity, Long buyPrice) {
-		long newTotalCost = this.quantity * this.averagePrice + buyQuantity * buyPrice;
-		this.quantity += buyQuantity;
-		this.averagePrice = newTotalCost / this.quantity;
-	}
-
-	public void updateQuantity(Long newQuantity){
-		if(newQuantity<0){
-			throw new IllegalArgumentException("보유 수량은 0보다 작을 수 없습니다.");
-		}
-		this.quantity = newQuantity;
-	}
+    fun updateQuantity(newQuantity: Long) {
+        // if 문과 throw IllegalArgumentException 대신 코틀린의 require 함수 사용
+        require(newQuantity >= 0) { "보유 수량은 0보다 작을 수 없습니다." }
+        this.quantity = newQuantity
+    }
 }
