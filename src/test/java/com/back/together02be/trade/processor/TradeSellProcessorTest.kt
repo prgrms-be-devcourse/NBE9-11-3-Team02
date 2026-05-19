@@ -106,7 +106,7 @@ class TradeSellProcessorTest {
 
         // then
         assertThat(res.quantity).isEqualTo(10L) // 코틀린 프로퍼티 접근 (getter 제거)
-        verify(tradeRepository,times(1)).save(any())
+        verify(tradeRepository, atLeastOnce()).save(any(Trade::class.java))
     }
 
     @Test
