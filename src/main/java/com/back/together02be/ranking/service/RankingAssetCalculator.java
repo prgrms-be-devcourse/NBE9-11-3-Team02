@@ -21,7 +21,7 @@ public class RankingAssetCalculator {
     private final RealTimeStockPriceStore realTimeStockPriceStore;
 
     /**
-     * 🎯 [N+1 해결 핵심 메서드]
+     *  [N+1 해결 메서드]
      * 모든 유저의 자산을 '단 1번의 주식 조회 쿼리'만 사용하여 메모리 상에서 일괄 계산.
      * * @param userAccounts 상위 서비스(RankingSnapshotService 등)에서 넘겨준 전체 유저 계좌 리스트
      * @return 유저 ID별 총자산 Map (Key: Users의 ID, Value: 총자산)
