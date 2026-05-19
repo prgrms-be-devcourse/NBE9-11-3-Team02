@@ -1,5 +1,6 @@
 package com.back.together02be.global.security
 
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.users.repository.UsersRepository
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -14,7 +15,7 @@ class CustomUserDetailsService(
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): UserDetails {
         val user = usersRepository.findByUsername(username)
-            .orElseThrow { UsernameNotFoundException("존재하지 않는 아이디입니다: $username") }
+            .getOrThrow { UsernameNotFoundException("존재하지 않는 아이디입니다: $username") }
 
         return SecurityUser(
             user.id,

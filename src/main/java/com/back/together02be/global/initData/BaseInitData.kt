@@ -6,6 +6,7 @@ import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.entity.UserStock
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.asset.repository.UserStockRepository
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.ranking.service.RankingSeasonService
 import com.back.together02be.stock.entity.Stock
 import com.back.together02be.stock.entity.StockMarket
@@ -40,7 +41,7 @@ class BaseInitData(
     private val rankingSeasonService: RankingSeasonService
 ) {
     private fun createTestUserIfNotExists(username: String, password: String, nickname: String) {
-        if (usersRepository.findByUsername(username).isPresent()) {
+        if (usersRepository.findByUsername(username) != null) {
             return
         }
 
@@ -81,15 +82,15 @@ class BaseInitData(
 
     @Transactional
     fun work2() {
-        if (usersRepository.findByUsername("user1").isEmpty()) {
+        if (usersRepository.findByUsername("user1") == null) {
             usersService.signup(SignupReq("user1", "password01", "password01", "유저1"))
         }
 
-        if (usersRepository.findByUsername("user2").isEmpty()) {
+        if (usersRepository.findByUsername("user2") == null) {
             usersService.signup(SignupReq("user2", "password02", "password02", "유저2"))
         }
 
-        if (usersRepository.findByUsername("user3").isEmpty()) {
+        if (usersRepository.findByUsername("user3") == null) {
             usersService.signup(SignupReq("user3", "password03", "password03", "유저3"))
         }
     }
@@ -157,53 +158,57 @@ class BaseInitData(
         }
 
         val plus1 = usersRepository.findByUsername("plus1")
-            .orElseGet {
+            ?: run {
                 usersService.signup(SignupReq("plus1", "password01", "password01", "플러스1"))
                 usersRepository.findByUsername("plus1")
-                    .orElseThrow { IllegalStateException("plus1 생성 실패") }
+                    .getOrThrow { IllegalStateException("plus1 생성 실패") }
             }
 
         val plus2 = usersRepository.findByUsername("plus2")
-            .orElseGet {
+            ?: run {
                 usersService.signup(SignupReq("plus2", "password02", "password02", "플러스2"))
                 usersRepository.findByUsername("plus2")
-                    .orElseThrow { IllegalStateException("plus2 생성 실패") }
+                    .getOrThrow { IllegalStateException("plus2 생성 실패") }
             }
 
         val minus1 = usersRepository.findByUsername("minus1")
-            .orElseGet {
+            ?: run {
                 usersService.signup(SignupReq("minus1", "password04", "password04", "마이너스1"))
                 usersRepository.findByUsername("minus1")
-                    .orElseThrow { IllegalStateException("minus1 생성 실패") }
+                    .getOrThrow { IllegalStateException("minus1 생성 실패") }
             }
 
         val minus2 = usersRepository.findByUsername("minus2")
-            .orElseGet {
+            ?: run {
                 usersService.signup(SignupReq("minus2", "password05", "password05", "마이너스2"))
                 usersRepository.findByUsername("minus2")
-                    .orElseThrow { IllegalStateException("minus2 생성 실패") }
+                    .getOrThrow { IllegalStateException("minus2 생성 실패") }
             }
 
         val plus1Account = userAccountRepository.findByUsersId(plus1.id)
-            .orElseThrow { IllegalStateException("plus1 계좌 없음") }
+            .orElse(null)
+            .getOrThrow { IllegalStateException("plus1 계좌 없음") }
         val plus2Account = userAccountRepository.findByUsersId(plus2.id)
-            .orElseThrow { IllegalStateException("plus2 계좌 없음") }
+            .orElse(null)
+            .getOrThrow { IllegalStateException("plus2 계좌 없음") }
         val minus1Account = userAccountRepository.findByUsersId(minus1.id)
-            .orElseThrow { IllegalStateException("minus1 계좌 없음") }
+            .orElse(null)
+            .getOrThrow { IllegalStateException("minus1 계좌 없음") }
         val minus2Account = userAccountRepository.findByUsersId(minus2.id)
-            .orElseThrow { IllegalStateException("minus2 계좌 없음") }
+            .orElse(null)
+            .getOrThrow { IllegalStateException("minus2 계좌 없음") }
 
 
         val samsung = stockRepository.findByStockCode("005930")
-            .orElseThrow { IllegalStateException("삼성전자 없음") }
+            .getOrThrow { IllegalStateException("삼성전자 없음") }
         val skhynix = stockRepository.findByStockCode("000660")
-            .orElseThrow { IllegalStateException("SK하이닉스 없음") }
+            .getOrThrow { IllegalStateException("SK하이닉스 없음") }
         val naver = stockRepository.findByStockCode("035420")
-            .orElseThrow { IllegalStateException("NAVER 없음") }
+            .getOrThrow { IllegalStateException("NAVER 없음") }
         val kakao = stockRepository.findByStockCode("035720")
-            .orElseThrow { IllegalStateException("카카오 없음") }
+            .getOrThrow { IllegalStateException("카카오 없음") }
         val lgChem = stockRepository.findByStockCode("051910")
-            .orElseThrow { IllegalStateException("LG화학 없음") }
+            .getOrThrow { IllegalStateException("LG화학 없음") }
 
         // 수익 유저
         userStockRepository.save<UserStock>(UserStock(plus1, samsung, 50L, 70000L))
