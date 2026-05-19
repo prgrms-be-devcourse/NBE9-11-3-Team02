@@ -6,6 +6,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import com.back.together02be.infra.kis.rest.dto.KisTokenRes;
 import com.back.together02be.infra.kis.rest.entity.KisAccessToken;
 import com.back.together02be.infra.kis.rest.repository.KisAccessTokenRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +34,9 @@ class KisTokenServiceTest {
     @Mock
     private KisAccessTokenRepository kisAccessTokenRepository;
 
+    @Mock
+    private KisTokenWriter kisTokenWriter;
+
     private MockRestServiceServer mockServer;
 
     @BeforeEach
@@ -59,9 +63,14 @@ class KisTokenServiceTest {
     }
 
     @Test
-    @DisplayName("유효한 토큰이 없으면 KIS API를 호출하여 신규 토큰을 발급받고 DB에 저장한다")
+    @DisplayName("유효한 토큰이 없으면 KIS API를 호출하여 신규 토큰을 발급받고 저장 요청한다")
     void issue_new_token() {
-        when(kisAccessTokenRepository.findTopByOrderByIdDesc()).thenReturn(Optional.empty());
+        // given
+        when(kisAccessTokenRepository.findTopByOrderByIdDesc())
+                .thenReturn(Optional.empty());
+
+        when(kisTokenWriter.saveTokenToDb(any(KisTokenRes.class)))
+                .thenReturn("new-fresh-token");
 
         String mockResponse = """
                 {
@@ -74,9 +83,13 @@ class KisTokenServiceTest {
         mockServer.expect(requestTo("https://api.kis.com/oauth2/tokenP"))
                 .andRespond(withSuccess(mockResponse, MediaType.APPLICATION_JSON));
 
+        // when
         String token = kisTokenService.getAccessToken();
 
+        // then
         assertThat(token).isEqualTo("new-fresh-token");
-        verify(kisAccessTokenRepository, times(1)).save(any(KisAccessToken.class));
+
+        verify(kisTokenWriter, times(1))
+                .saveTokenToDb(any(KisTokenRes.class));
     }
 }

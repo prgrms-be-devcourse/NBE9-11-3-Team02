@@ -24,9 +24,6 @@ class KisPriceClientTest {
     @InjectMocks
     private KisPriceClient kisPriceClient;
 
-    @Mock
-    private KisTokenService kisTokenService;
-
     private MockRestServiceServer mockServer;
 
     @BeforeEach
@@ -73,5 +70,7 @@ class KisPriceClientTest {
         assertThat(response.returnCode()).isEqualTo("0");
         assertThat(response.output().currentPrice()).isEqualTo("75000");
         assertThat(response.output().changeRate()).isEqualTo("0.67");
+
+        mockServer.verify();
     }
 }
