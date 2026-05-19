@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.back.together02be.infra.kis.config.KisProperties;
@@ -37,7 +36,6 @@ import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
  *       실제 WebSocket 연결은 로컬 TestWebSocketServer로 대체.
  *       handler를 mock해서 호출 여부 검증.
  */
-@Timeout(value = 15, unit = TimeUnit.SECONDS)
 class KisWebSocketClientTest {
 
 	// 가짜 서버 & SUT

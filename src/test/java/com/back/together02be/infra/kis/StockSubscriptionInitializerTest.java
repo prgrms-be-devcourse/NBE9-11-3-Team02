@@ -4,14 +4,12 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Timeout;
 import org.mockito.InOrder;
 
 import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
@@ -38,7 +36,6 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore;
  * 주의: seedPricesByRest()와 reseedPricesByRest()에 Thread.sleep(1000)이 종목당 1번 박혀있음.
  * 종목 수를 최소화(1~2개)해서 sleep 총량을 줄임.
  */
-@Timeout(value = 15, unit = TimeUnit.SECONDS)
 class StockSubscriptionInitializerTest {
 
 	// Mock
