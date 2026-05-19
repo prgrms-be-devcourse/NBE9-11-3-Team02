@@ -1,20 +1,24 @@
 package com.back.together02be.infra.kis;
 
-import com.back.together02be.infra.kis.rest.KisPriceClient;
-import com.back.together02be.infra.kis.websocket.KisWebSocketClient;
-import com.back.together02be.stock.dto.RealtimeStockPrice;
-import com.back.together02be.infra.kis.rest.dto.KisPriceRes;
-import com.back.together02be.stock.entity.Stock;
-import com.back.together02be.stock.repository.StockRepository;
-import com.back.together02be.stock.service.RealTimeStockPriceStore;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
+import com.back.together02be.infra.kis.rest.KisPriceClient;
+import com.back.together02be.infra.kis.rest.dto.KisPriceRes;
+import com.back.together02be.infra.kis.websocket.KisWebSocketClient;
+import com.back.together02be.stock.dto.RealtimeStockPrice;
+import com.back.together02be.stock.entity.Stock;
+import com.back.together02be.stock.repository.StockRepository;
+import com.back.together02be.stock.service.RealTimeStockPriceStore;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
@@ -25,6 +29,8 @@ public class StockSubscriptionInitializer {
 	private final KisPriceClient kisPriceClient;
 	private final KisWebSocketClient kisWebSocketClient;
 	private final RealTimeStockPriceStore rtStockPriceStore;
+
+	private final AtomicBoolean reseedInProgress = new AtomicBoolean(false);
 
 	@EventListener(ApplicationReadyEvent.class)
 	@Async
@@ -93,5 +99,52 @@ public class StockSubscriptionInitializer {
 				log.warn("주식 종목 구독 실패: {} - {} - {}", stock.getStockCode(), stock.getStockName(), e.getMessage());
 			}
 		}
+	}
+
+	@EventListener
+	@Async
+	public void onWebSocketReconnected(WebSocketReconnectedEvent event) {
+		if (!reseedInProgress.compareAndSet(false, true)) {
+			log.info("재시딩 이미 진행 중, skip");
+			return;
+		}
+		try {
+			log.info("WebSocket 재연결 감지 → REST 재시딩 시작");
+			List<Stock> stocks = stockRepository.findAll();
+			reseedPricesByRest(stocks);
+		} finally {
+			reseedInProgress.set(false);
+		}
+	}
+
+	private void reseedPricesByRest(List<Stock> stocks) {
+		String token = kisPriceClient.getAccessToken();
+		int success = 0;
+		int fail = 0;
+
+		for (Stock stock : stocks) {
+			try {
+				KisPriceRes restStock = kisPriceClient.getCurrentPrice(token, stock.getStockCode());
+
+				rtStockPriceStore.put(  // ← putIfAbsent 대신 put (stale 덮어쓰기)
+					stock.getStockCode(),
+					RealtimeStockPrice.fromRest(stock.getStockCode(), restStock.output())
+				);
+				success++;
+
+			} catch (Exception e) {
+				fail++;
+				log.warn("REST 재시딩 실패: {} - {}", stock.getStockCode(), e.getMessage());
+			}
+
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				log.warn("REST 재시딩 중단됨");
+				return;
+			}
+		}
+		log.info("REST 재시딩 결과: 성공 {}, 실패 {}", success, fail);
 	}
 }
