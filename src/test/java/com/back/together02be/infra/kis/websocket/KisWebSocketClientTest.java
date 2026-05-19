@@ -18,6 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.springframework.context.ApplicationEventPublisher;
 
 import com.back.together02be.infra.kis.config.KisProperties;
@@ -36,6 +37,7 @@ import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
  *       실제 WebSocket 연결은 로컬 TestWebSocketServer로 대체.
  *       handler를 mock해서 호출 여부 검증.
  */
+@Timeout(value = 15, unit = TimeUnit.SECONDS)
 class KisWebSocketClientTest {
 
 	// 가짜 서버 & SUT
@@ -60,7 +62,7 @@ class KisWebSocketClientTest {
 
 		// 2) KisProperties — 가짜 서버 URL을 반환하도록 stub
 		kisProperties = mock(KisProperties.class);
-		when(kisProperties.getWsUrl()).thenReturn("ws://localhost:" + port);
+		when(kisProperties.getWsUrl()).thenReturn("ws://127.0.0.1:" + port);
 
 		// 3) ApprovalKeyService — 고정 키 반환
 		approvalKeyService = mock(ApprovalKeyService.class);
@@ -315,7 +317,7 @@ class KisWebSocketClientTest {
 		}
 
 		TestWebSocketServer(int port) {
-			super(new InetSocketAddress(port));
+			super(new InetSocketAddress("127.0.0.1", port));
 			setReuseAddr(true); // 재시작 시 같은 포트 재바인딩 허용
 		}
 
