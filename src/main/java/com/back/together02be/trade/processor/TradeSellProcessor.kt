@@ -14,7 +14,10 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.*
+import java.time.Clock
+import java.time.DayOfWeek
+import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -56,8 +59,9 @@ class TradeSellProcessor(
         val tradeTime = LocalTime.parse(tradeTimeStr, formatter)
 
         // 현재 날짜와 매칭
-        val tradeDateTime = LocalDateTime.of(LocalDate.now(), tradeTime)
-        val now = LocalDateTime.now()
+        //val tradeDateTime = LocalDateTime.of(LocalDate.now(), tradeTime)
+        val now = LocalDateTime.now(clock)
+        val tradeDateTime = LocalDateTime.of(now.toLocalDate(), tradeTime)
 
         return ChronoUnit.SECONDS.between(tradeDateTime, now) > limitSeconds
     }
