@@ -12,7 +12,6 @@ import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.test.util.ReflectionTestUtils
-import java.util.Optional
 
 @ExtendWith(MockitoExtension::class)
 internal class CustomUserDetailsServiceTest {
@@ -27,7 +26,7 @@ internal class CustomUserDetailsServiceTest {
         ReflectionTestUtils.setField(user, "id", 1L)
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
 
         val service = CustomUserDetailsService(usersRepository)
 
@@ -50,7 +49,7 @@ internal class CustomUserDetailsServiceTest {
     fun loadUserByUsername_notFound() {
         // given
         Mockito.`when`(usersRepository.findByUsername("missing"))
-            .thenReturn(Optional.empty<Users>())
+            .thenReturn(null)
 
         val service = CustomUserDetailsService(usersRepository)
 

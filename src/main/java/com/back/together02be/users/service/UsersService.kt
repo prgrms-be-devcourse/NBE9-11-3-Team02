@@ -2,6 +2,7 @@ package com.back.together02be.users.service
 
 import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.repository.UserAccountRepository
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.global.util.JwtUtil
 import com.back.together02be.ranking.service.RankingSeasonService
 import com.back.together02be.users.dto.request.LoginReq
@@ -14,8 +15,7 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
-import java.util.function.Supplier
+import java.util.UUID
 
 @Service
 class UsersService (
@@ -31,7 +31,7 @@ class UsersService (
 
     @Transactional
     fun signup(req: SignupReq) {
-        require(!usersRepository.findByUsername(req.username).isPresent()) { "이미 사용중인 아이디입니다." }
+        require(usersRepository.findByUsername(req.username) == null) { "이미 사용중인 아이디입니다." }
 
         require(req.password == req.passwordConfirm) { "비밀번호가 일치하지 않습니다." }
 
@@ -60,9 +60,7 @@ class UsersService (
     fun login(req: LoginReq): Array<String> {
         val user = usersRepository
             .findByUsername(req.username)
-            .orElseThrow<IllegalArgumentException?>(
-                Supplier { IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.") }
-            )
+            .getOrThrow { IllegalArgumentException("아이디 또는 비밀번호가 올바르지 않습니다.") }
 
         require(passwordEncoder.matches(req.password, user.password)) { "아이디 또는 비밀번호가 올바르지 않습니다." }
 
@@ -87,9 +85,7 @@ class UsersService (
     fun logout(refreshToken: String) {
         val user = usersRepository
             .findByRefreshToken(refreshToken)
-            .orElseThrow<IllegalArgumentException?>(
-                Supplier { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
-            )
+            .getOrThrow { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
 
         user.clearRefreshToken()
     }
@@ -98,12 +94,10 @@ class UsersService (
     fun reissueToken(refreshToken: String): Array<String> {
         val user = usersRepository
             .findByRefreshToken(refreshToken)
-            .orElseThrow<IllegalArgumentException?>(
-                Supplier { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
-            )
+            .getOrThrow { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
 
         val refreshTokenExpiration = user.refreshTokenExpiration
-            ?: throw IllegalArgumentException("리프레시 토큰이 만료되었습니다.")
+            .getOrThrow { IllegalArgumentException("리프레시 토큰이 만료되었습니다.") }
 
         require(!refreshTokenExpiration.isBefore(LocalDateTime.now())) {
             "리프레시 토큰이 만료되었습니다."
