@@ -1,6 +1,7 @@
 package com.back.together02be.trade.service
 
 import com.back.together02be.global.exception.DuplicateRequestException
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.global.idempotency.IdempotencyService
 import com.back.together02be.trade.dto.BuyReq
 import com.back.together02be.trade.dto.BuyRes
@@ -21,8 +22,8 @@ class TradeService(
     fun buy(userId: Long, idempotencyKey: String, request: BuyReq): BuyRes {
         if (!idempotencyService.registerIfAbsent(idempotencyKey, userId)) {
             return idempotencyService.getStoredResponse(idempotencyKey)
-                .map { objectMapper.readValue(it, BuyRes::class.java) }
-                .orElseThrow { DuplicateRequestException("요청이 처리 중입니다. 잠시 후 다시 시도해주세요.") }
+                ?.let { objectMapper.readValue(it, BuyRes::class.java) }
+                .getOrThrow { DuplicateRequestException("요청이 처리 중입니다. 잠시 후 다시 시도해주세요.") }
         }
         return try {
             tradeBuyProcessor.processBuy(userId, idempotencyKey, request)
