@@ -43,6 +43,8 @@ public class KisTokenService {
 
     private final RestClient restClient;
 
+    private final KisTokenWriter kisTokenWriter;
+
     // 사용 가능한 토큰이 있으면 재사용, 없으면 새로 발급
     public String getAccessToken() {
         KisAccessToken savedToken = kisAccessTokenRepository.findTopByOrderByIdDesc()
@@ -63,7 +65,7 @@ public class KisTokenService {
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 KisTokenRes tokenResponse = fetchTokenFromApi(); // 외부 API 호출 (트랜잭션 X)
-                return saveTokenToDb(tokenResponse);             // DB 저장 (트랜잭션 O)
+                return kisTokenWriter.saveTokenToDb(tokenResponse);             // DB 저장 (트랜잭션 O)
 
             } catch (HttpClientErrorException.Forbidden e) {
                 String responseBody = e.getResponseBodyAsString();
@@ -85,7 +87,7 @@ public class KisTokenService {
         throw new IllegalStateException("토큰 발급 실패");
     }
 
-    // 1. 외부 API 통신 전용 (트랜잭션 없음)
+    // 외부 API 통신 전용 (트랜잭션 없음)
     private KisTokenRes fetchTokenFromApi() {
         String url = restBaseUrl + "/oauth2/tokenP";
         Map<String, String> requestBody = Map.of(
@@ -101,31 +103,6 @@ public class KisTokenService {
                 .body(requestBody)
                 .retrieve()
                 .body(KisTokenRes.class);
-    }
-
-    // 2. DB 저장 전용 (여기서만 트랜잭션 사용)
-    @Transactional
-    protected String saveTokenToDb(KisTokenRes tokenResponse) {
-        if (tokenResponse == null || tokenResponse.accessToken() == null) {
-            throw new IllegalStateException("토큰 발급 실패");
-        }
-
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(tokenResponse.expiresIn() == null ? 0 : tokenResponse.expiresIn());
-
-        KisAccessToken tokenEntity = kisAccessTokenRepository.findTopByOrderByIdDesc().orElse(null);
-
-        if (tokenEntity == null) {
-            tokenEntity = new KisAccessToken(tokenResponse.accessToken(), tokenResponse.tokenType(), expiresAt);
-        } else {
-            tokenEntity.update(tokenResponse.accessToken(), tokenResponse.tokenType(), expiresAt);
-        }
-
-        // 통신이 다 끝나고 결과를 저장하는 순간에만 DB 커넥션 사용
-        kisAccessTokenRepository.save(tokenEntity);
-        log.info("KIS 접근 토큰 신규 발급 및 저장 완료. expiresAt={}", expiresAt);
-
-        return tokenEntity.getAccessToken();
     }
 
     private void sleepRetryInterval(int attempt) {
