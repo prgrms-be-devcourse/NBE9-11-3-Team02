@@ -25,7 +25,6 @@ import org.mockito.stubbing.Answer
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.LocalDateTime
-import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 internal class UsersServiceTest {
@@ -62,7 +61,7 @@ internal class UsersServiceTest {
         val req = SignupReq("testuser", "password1!", "password1!", "닉네임")
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.empty<Users>())
+            .thenReturn(null)
         Mockito.`when`(passwordEncoder.encode("password1!")).thenReturn("encodedPassword")
         Mockito.`when`(usersRepository.save(ArgumentMatchers.any(Users::class.java)))
             .thenAnswer(Answer { inv: InvocationOnMock -> inv.getArgument<Users>(0) })
@@ -81,7 +80,7 @@ internal class UsersServiceTest {
         val req = SignupReq("testuser", "password1!", "password1!", "닉네임")
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.of<Users>(Users("testuser", "encoded", "닉네임")))
+            .thenReturn(Users("testuser", "encoded", "닉네임"))
 
         assertThatThrownBy { usersService.signup(req) }
             .isInstanceOf(IllegalArgumentException::class.java)
@@ -96,7 +95,7 @@ internal class UsersServiceTest {
         val req = SignupReq("testuser", "password1!", "different!", "닉네임")
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.empty<Users>())
+            .thenReturn(null)
 
         assertThatThrownBy { usersService.signup(req) }
             .isInstanceOf(IllegalArgumentException::class.java)
@@ -113,7 +112,7 @@ internal class UsersServiceTest {
         ReflectionTestUtils.setField(user, "id", 1L)
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
         Mockito.`when`(passwordEncoder.matches("password1!", "encodedPassword")).thenReturn(true)
 
         val tokens: Array<String> = usersService.login(req)
@@ -136,7 +135,7 @@ internal class UsersServiceTest {
     fun t5() {
         val req = LoginReq("nobody", "password1!")
 
-        Mockito.`when`(usersRepository.findByUsername("nobody")).thenReturn(Optional.empty<Users>())
+        Mockito.`when`(usersRepository.findByUsername("nobody")).thenReturn(null)
 
         assertThatThrownBy { usersService.login(req) }
             .isInstanceOf(IllegalArgumentException::class.java)
@@ -150,7 +149,7 @@ internal class UsersServiceTest {
         val user = Users("testuser", "encodedPassword", "닉네임")
 
         Mockito.`when`(usersRepository.findByUsername("testuser"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
         Mockito.`when`(passwordEncoder.matches("wrongpass!", "encodedPassword")).thenReturn(false)
 
         assertThatThrownBy { usersService.login(req) }
@@ -165,7 +164,7 @@ internal class UsersServiceTest {
         user.updateRefreshToken("valid-token", LocalDateTime.now().plusDays(7))
 
         Mockito.`when`(usersRepository.findByRefreshToken("valid-token"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
 
         usersService.logout("valid-token")
 
@@ -177,7 +176,7 @@ internal class UsersServiceTest {
     @DisplayName("존재하지 않는 RefreshToken으로 로그아웃 — IllegalArgumentException 발생")
     fun t8() {
         Mockito.`when`(usersRepository.findByRefreshToken("invalid-token"))
-            .thenReturn(Optional.empty<Users>())
+            .thenReturn(null)
 
         assertThatThrownBy { usersService.logout("invalid-token") }
             .isInstanceOf(IllegalArgumentException::class.java)
@@ -192,7 +191,7 @@ internal class UsersServiceTest {
         user.updateRefreshToken("old-token", LocalDateTime.now().plusDays(7))
 
         Mockito.`when`(usersRepository.findByRefreshToken("old-token"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
 
         val tokens: Array<String> = usersService.reissueToken("old-token")
         val payload = JwtUtil.payloadOrNull(tokens[0], "test-secret-key-must-be-32-bytes!!")
@@ -212,7 +211,7 @@ internal class UsersServiceTest {
     @DisplayName("존재하지 않는 RefreshToken으로 재발급 — IllegalArgumentException 발생")
     fun t10() {
         Mockito.`when`(usersRepository.findByRefreshToken("ghost-token"))
-            .thenReturn(Optional.empty<Users>())
+            .thenReturn(null)
 
         assertThatThrownBy { usersService.reissueToken("ghost-token") }
             .isInstanceOf(IllegalArgumentException::class.java)
@@ -226,7 +225,7 @@ internal class UsersServiceTest {
         user.updateRefreshToken("expired-token", LocalDateTime.now().minusSeconds(1))
 
         Mockito.`when`(usersRepository.findByRefreshToken("expired-token"))
-            .thenReturn(Optional.of<Users>(user))
+            .thenReturn(user)
 
         assertThatThrownBy { usersService.reissueToken("expired-token") }
             .isInstanceOf(IllegalArgumentException::class.java)
