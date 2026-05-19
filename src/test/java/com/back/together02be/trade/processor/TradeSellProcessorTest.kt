@@ -99,14 +99,14 @@ class TradeSellProcessorTest {
 
         val mockTrade = Trade.sell(account.users, stock, 10L, 55000L, 450000L)
         ReflectionTestUtils.setField(mockTrade, "id", 1L)
-        given(tradeRepository.save(any())).willReturn(mockTrade)
+        given(tradeRepository.save(any(Trade::class.java))).willReturn(mockTrade)
 
         // when
         val res = tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 10L, 50000L))
 
         // then
         assertThat(res.quantity).isEqualTo(10L) // 코틀린 프로퍼티 접근 (getter 제거)
-        verify(tradeRepository).save(any())
+        verify(tradeRepository).save(any(Trade::class.java))
     }
 
     @Test
@@ -129,7 +129,7 @@ class TradeSellProcessorTest {
 
         val mockTrade = Trade.sell(account.users, stock, 20L, 55000L, 900000L)
         ReflectionTestUtils.setField(mockTrade, "id", 2L)
-        given(tradeRepository.save(any())).willReturn(mockTrade)
+        given(tradeRepository.save(any(Trade::class.java))).willReturn(mockTrade)
 
         // when
         tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 20L, 50000L))
