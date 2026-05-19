@@ -20,6 +20,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
@@ -32,6 +33,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
+import org.mockito.BDDMockito.given
 
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -61,6 +63,9 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
     @Autowired
     private lateinit var rankingSeasonRepository: RankingSeasonRepository
 
+    @MockitoBean
+    private lateinit var clock: Clock
+
     private var userId: Long = 0L
     private var stockId: Long = 0L
 
@@ -76,7 +81,8 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
     @BeforeEach
     fun setUp() {
-        MarketTimeValidator.clock = fixedClock
+        given(clock.instant()).willReturn(fixedClock.instant())
+        given(clock.zone).willReturn(fixedClock.zone)
 
         val stock = stockRepository.findByStockCode("005930")
             .orElseThrow { IllegalStateException("삼성전자 종목이 초기 데이터에 없습니다.") }
@@ -92,7 +98,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         val userStock = UserStock(user, stock, INITIAL_QUANTITY, STOCK_PRICE)
         userStockRepository.saveAndFlush(userStock)
 
-        val currentTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
+        val currentTime = "100000"
         val realtimePrice = RealtimeStockPrice.builder()
             .stockCode("005930")
             .price(STOCK_PRICE.toString())
@@ -106,8 +112,6 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
     @AfterEach
     fun tearDown() {
-        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
-
         tradeRepository.deleteAll()
         userStockRepository.deleteAll()
         userAccountRepository.deleteAll()

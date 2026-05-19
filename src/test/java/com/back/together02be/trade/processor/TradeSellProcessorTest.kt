@@ -1,5 +1,6 @@
 package com.back.together02be.trade.processor
 
+//import org.mockito.BDDMockito.given
 import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.entity.UserStock
 import com.back.together02be.asset.repository.UserAccountRepository
@@ -11,7 +12,6 @@ import com.back.together02be.stock.repository.StockRepository
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.repository.TradeRepository
-import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
@@ -19,8 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.BDDMockito.given
 import org.mockito.Mock
-import org.mockito.Mockito.any
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.Clock
 import java.time.LocalDateTime
@@ -39,6 +38,7 @@ class TradeSellProcessorTest {
     @Mock lateinit var userStockRepository: UserStockRepository
     @Mock lateinit var stockRepository: StockRepository
     @Mock lateinit var tradeRepository: TradeRepository
+    @Mock lateinit var clock: Clock
 
     //private lateinit var marketValidator: MockedStatic<MarketTimeValidator>
 
@@ -57,21 +57,23 @@ class TradeSellProcessorTest {
             userAccountRepository,
             userStockRepository,
             stockRepository,
-            tradeRepository
+            tradeRepository,
+            clock
         )
-        MarketTimeValidator.clock = fixedClock
+//        lenient().given(clock.instant()).willReturn(fixedInstant)
+//        lenient().given(clock.zone).willReturn(seoulZone)
+        lenient().`when`(clock.instant()).thenReturn(fixedClock.instant())
+        lenient().`when`(clock.zone).thenReturn(fixedClock.zone)
     }
 
     @AfterEach
     fun tearDown() {
-        // 수정: 테스트 후 원래 clock으로 복원
-        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
     }
 
 
     // 공통 Mocking 설정을 위한 Helper 메서드
     private fun mockCommonDependencies(stock: Stock, userStock: UserStock, account: UserAccount) {
-        given(stockRepository.findById(any())).willReturn(Optional.of(stock))
+        given(stockRepository.findById(anyLong())).willReturn(Optional.of(stock))
         given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(Optional.of(userStock))
     }
 
@@ -85,13 +87,13 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = "100000"
         given(stockPriceStore.get(stock.stockCode)).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
-        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1)
-        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account))
+        given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
 
         // when
         val res = tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 10L, 50000L))
@@ -116,8 +118,8 @@ class TradeSellProcessorTest {
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
-        given(userAccountRepository.updateDepositAndPurchase(any(), any(), any())).willReturn(1)
-        given(userAccountRepository.findByUsersId(any())).willReturn(Optional.of(account))
+        given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
 
         // when
         tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 20L, 50000L))

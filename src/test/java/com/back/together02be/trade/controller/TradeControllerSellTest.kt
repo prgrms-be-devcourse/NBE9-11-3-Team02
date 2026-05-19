@@ -8,16 +8,17 @@ import com.back.together02be.global.util.JwtUtil
 import com.back.together02be.stock.dto.RealtimeStockPrice
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.ControllerTestSupport
-import com.back.together02be.trade.util.MarketTimeValidator
 import jakarta.transaction.Transactional
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
+import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.test.web.servlet.ResultActions
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
@@ -46,6 +47,9 @@ class TradeControllerSellTest : ControllerTestSupport(){
 
     private lateinit var accessToken: String
 
+    @MockitoBean
+    private lateinit var clock: Clock
+
     private val fixedClock = Clock.fixed(
         LocalDateTime.of(2024, 1, 15, 10, 0)
             .atZone(ZoneId.of("Asia/Seoul")).toInstant(),
@@ -55,7 +59,8 @@ class TradeControllerSellTest : ControllerTestSupport(){
 
     @BeforeEach
     fun setUp(){
-        MarketTimeValidator.clock = fixedClock
+        given(clock.instant()).willReturn(fixedClock.instant())
+        given(clock.zone).willReturn(fixedClock.zone)
 
         accessToken = JwtUtil.generateAccessToken(
             jwtSecret,
@@ -90,14 +95,13 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .changeSign("1")
             .change("1")
             .changeRate("3")
-            .tradeTime(LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss")))
+            .tradeTime(LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss")))
             .build()
         realtimeStockPriceService.put("005930", samsungPrice)
     }
     @AfterEach
     fun tearDown() {
-        // 수정: clock 복원
-        MarketTimeValidator.clock = Clock.system(ZoneId.of("Asia/Seoul"))
+
     }
 
     @Test

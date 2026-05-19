@@ -9,15 +9,12 @@ import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.dto.response.TradeSellRes
 import com.back.together02be.trade.entity.Trade
 import com.back.together02be.trade.repository.TradeRepository
-import com.back.together02be.trade.util.MarketTimeValidator
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.math.RoundingMode
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
+import java.time.*
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
@@ -28,10 +25,27 @@ class TradeSellProcessor(
     private val userStockRepository: UserStockRepository,
     private val stockRepository: StockRepository,
     private val tradeRepository: TradeRepository,
+    private val clock: Clock
 ) {
 
     companion object {
         private val SELL_TOLERANCE_RATE = BigDecimal("0.98")
+    }
+
+    private fun validateMarketOpen() {
+        val now = LocalDateTime.now(clock)
+        val day = now.dayOfWeek
+        val time = now.toLocalTime()
+
+        // 주말 체크
+        if (day == DayOfWeek.SATURDAY || day == DayOfWeek.SUNDAY) {
+            throw IllegalStateException("주말에는 거래할 수 없습니다.")
+        }
+
+        // 시간 체크 (09:00 ~ 15:30)
+        if (time.isBefore(LocalTime.of(9, 0)) || time.isAfter(LocalTime.of(15, 30))) {
+            throw IllegalStateException("장 운영 시간(09:00 ~ 15:30) 외에는 거래가 불가능합니다.")
+        }
     }
 
     // 10초 이상 지연시 예외처리
@@ -51,7 +65,7 @@ class TradeSellProcessor(
     @Transactional
     fun processSell(userId: Long, request: TradeSellReq): TradeSellRes {
         // 0. 장 마감 조회
-        MarketTimeValidator.validateMarketOpen()
+        validateMarketOpen()
 
         // 1. 주식 정보 조회 및 보유 주식 조회
         val stock = stockRepository.findById(request.stockId)
