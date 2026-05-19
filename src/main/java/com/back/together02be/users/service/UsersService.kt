@@ -128,7 +128,7 @@ class UsersService (
 
     private fun createAccessTokenBody(user: Users): Map<String, Any> {
         return mapOf<String, Any>(
-            "id" to user.getId(),
+            "id" to user.id,
             "username" to user.username,
             "nickname" to user.nickname
         )
