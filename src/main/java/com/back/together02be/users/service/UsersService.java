@@ -3,6 +3,7 @@ package com.back.together02be.users.service;
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.global.util.JwtUtil;
+import com.back.together02be.global.util.TokenHashUtil;
 import com.back.together02be.ranking.service.RankingSeasonService;
 import com.back.together02be.users.dto.request.LoginReq;
 import com.back.together02be.users.dto.request.SignupReq;
@@ -90,7 +91,7 @@ public class UsersService {
         // RefreshToken 발급
         String refreshToken = UUID.randomUUID().toString();
         user.updateRefreshToken(
-                refreshToken,
+                TokenHashUtil.sha256(refreshToken),
                 LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         );
 
@@ -101,7 +102,7 @@ public class UsersService {
     public void logout(String refreshToken) {
 
         Users user = usersRepository
-                .findByRefreshToken(refreshToken)
+                .findByRefreshToken(TokenHashUtil.sha256(refreshToken))
                 .orElseThrow(
                         () -> new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.")
                 );
@@ -113,7 +114,7 @@ public class UsersService {
     public String[] reissueToken(String refreshToken) {
 
         Users user = usersRepository
-                .findByRefreshToken(refreshToken)
+                .findByRefreshToken(TokenHashUtil.sha256(refreshToken))
                 .orElseThrow(
                         () -> new IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.")
                 );
@@ -133,7 +134,7 @@ public class UsersService {
         // RefreshToken 갱신
         String newRefreshToken = UUID.randomUUID().toString();
         user.updateRefreshToken(
-                newRefreshToken,
+                TokenHashUtil.sha256(newRefreshToken),
                 LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         );
 
