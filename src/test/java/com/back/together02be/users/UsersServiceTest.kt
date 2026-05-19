@@ -3,6 +3,7 @@ package com.back.together02be.users
 import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.global.util.JwtUtil
+import com.back.together02be.global.util.TokenHashUtil
 import com.back.together02be.ranking.service.RankingSeasonService
 import com.back.together02be.users.dto.request.LoginReq
 import com.back.together02be.users.dto.request.SignupReq
@@ -126,7 +127,7 @@ internal class UsersServiceTest {
         assertThat((tokenPayload["id"] as Number).toLong()).isEqualTo(1L)
         assertThat(tokenPayload["username"]).isEqualTo("testuser")
         assertThat(tokenPayload["nickname"]).isEqualTo("닉네임")
-        assertThat(user.refreshToken).isEqualTo(tokens[1])
+        assertThat(user.refreshToken).isEqualTo(TokenHashUtil.sha256(tokens[1]))
         assertThat(user.refreshTokenExpiration).isAfter(LocalDateTime.now())
     }
 
@@ -161,9 +162,9 @@ internal class UsersServiceTest {
     @DisplayName("정상 로그아웃 — RefreshToken 초기화")
     fun t7() {
         val user = Users("testuser", "encoded", "닉네임")
-        user.updateRefreshToken("valid-token", LocalDateTime.now().plusDays(7))
+        user.updateRefreshToken(TokenHashUtil.sha256("valid-token"), LocalDateTime.now().plusDays(7))
 
-        Mockito.`when`(usersRepository.findByRefreshToken("valid-token"))
+        Mockito.`when`(usersRepository.findByRefreshToken(TokenHashUtil.sha256("valid-token")))
             .thenReturn(user)
 
         usersService.logout("valid-token")
@@ -175,7 +176,7 @@ internal class UsersServiceTest {
     @Test
     @DisplayName("존재하지 않는 RefreshToken으로 로그아웃 — IllegalArgumentException 발생")
     fun t8() {
-        Mockito.`when`(usersRepository.findByRefreshToken("invalid-token"))
+        Mockito.`when`(usersRepository.findByRefreshToken(TokenHashUtil.sha256("invalid-token")))
             .thenReturn(null)
 
         assertThatThrownBy { usersService.logout("invalid-token") }
@@ -188,9 +189,9 @@ internal class UsersServiceTest {
     fun t9() {
         val user = Users("testuser", "encoded", "닉네임")
         ReflectionTestUtils.setField(user, "id", 1L)
-        user.updateRefreshToken("old-token", LocalDateTime.now().plusDays(7))
+        user.updateRefreshToken(TokenHashUtil.sha256("old-token"), LocalDateTime.now().plusDays(7))
 
-        Mockito.`when`(usersRepository.findByRefreshToken("old-token"))
+        Mockito.`when`(usersRepository.findByRefreshToken(TokenHashUtil.sha256("old-token")))
             .thenReturn(user)
 
         val tokens: Array<String> = usersService.reissueToken("old-token")
@@ -204,13 +205,13 @@ internal class UsersServiceTest {
         assertThat((tokenPayload["id"] as Number).toLong()).isEqualTo(1L)
         assertThat(tokenPayload["username"]).isEqualTo("testuser")
         assertThat(tokenPayload["nickname"]).isEqualTo("닉네임")
-        assertThat(user.refreshToken).isEqualTo(tokens[1])
+        assertThat(user.refreshToken).isEqualTo(TokenHashUtil.sha256(tokens[1]))
     }
 
     @Test
     @DisplayName("존재하지 않는 RefreshToken으로 재발급 — IllegalArgumentException 발생")
     fun t10() {
-        Mockito.`when`(usersRepository.findByRefreshToken("ghost-token"))
+        Mockito.`when`(usersRepository.findByRefreshToken(TokenHashUtil.sha256("ghost-token")))
             .thenReturn(null)
 
         assertThatThrownBy { usersService.reissueToken("ghost-token") }
@@ -222,9 +223,9 @@ internal class UsersServiceTest {
     @DisplayName("만료된 RefreshToken — IllegalArgumentException 발생")
     fun t11() {
         val user = Users("testuser", "encoded", "닉네임")
-        user.updateRefreshToken("expired-token", LocalDateTime.now().minusSeconds(1))
+        user.updateRefreshToken(TokenHashUtil.sha256("expired-token"), LocalDateTime.now().minusSeconds(1))
 
-        Mockito.`when`(usersRepository.findByRefreshToken("expired-token"))
+        Mockito.`when`(usersRepository.findByRefreshToken(TokenHashUtil.sha256("expired-token")))
             .thenReturn(user)
 
         assertThatThrownBy { usersService.reissueToken("expired-token") }

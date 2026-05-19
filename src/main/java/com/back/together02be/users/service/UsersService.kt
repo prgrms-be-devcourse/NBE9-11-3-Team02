@@ -4,6 +4,7 @@ import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.global.util.JwtUtil
+import com.back.together02be.global.util.TokenHashUtil
 import com.back.together02be.ranking.service.RankingSeasonService
 import com.back.together02be.users.dto.request.LoginReq
 import com.back.together02be.users.dto.request.SignupReq
@@ -74,7 +75,7 @@ class UsersService (
         // RefreshToken 발급
         val refreshToken: String = UUID.randomUUID().toString()
         user.updateRefreshToken(
-            refreshToken,
+            TokenHashUtil.sha256(refreshToken),
             LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         )
 
@@ -84,7 +85,7 @@ class UsersService (
     @Transactional
     fun logout(refreshToken: String) {
         val user = usersRepository
-            .findByRefreshToken(refreshToken)
+            .findByRefreshToken(TokenHashUtil.sha256(refreshToken))
             .getOrThrow { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
 
         user.clearRefreshToken()
@@ -93,7 +94,7 @@ class UsersService (
     @Transactional
     fun reissueToken(refreshToken: String): Array<String> {
         val user = usersRepository
-            .findByRefreshToken(refreshToken)
+            .findByRefreshToken(TokenHashUtil.sha256(refreshToken))
             .getOrThrow { IllegalArgumentException("유효하지 않은 리프레시 토큰입니다.") }
 
         val refreshTokenExpiration = user.refreshTokenExpiration
@@ -113,7 +114,7 @@ class UsersService (
         // RefreshToken 갱신
         val newRefreshToken: String = UUID.randomUUID().toString()
         user.updateRefreshToken(
-            newRefreshToken,
+            TokenHashUtil.sha256(newRefreshToken),
             LocalDateTime.now().plusSeconds(refreshExpireSeconds)
         )
 
