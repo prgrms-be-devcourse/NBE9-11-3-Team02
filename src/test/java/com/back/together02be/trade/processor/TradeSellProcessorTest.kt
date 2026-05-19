@@ -14,25 +14,19 @@ import com.back.together02be.trade.repository.TradeRepository
 import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.DisplayName
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.anyLong
+import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.MockedStatic
-import org.mockito.Mockito.any
-import org.mockito.Mockito.eq
-import org.mockito.Mockito.mockStatic
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import java.util.Optional
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class TradeSellProcessorTest {
@@ -147,7 +141,7 @@ class TradeSellProcessorTest {
         mockCommonDependencies(stock, userStock, account)
 
         val nowTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
-        given(stockPriceStore.get(any())).willReturn(
+        given(stockPriceStore.get(anyString())).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(0)
