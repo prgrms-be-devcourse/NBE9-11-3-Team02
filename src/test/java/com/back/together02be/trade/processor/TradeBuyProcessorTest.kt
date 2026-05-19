@@ -80,6 +80,8 @@ class TradeBuyProcessorTest {
         Mockito.lenient().`when`(userStockRepository.save(any(UserStock::class.java))).thenAnswer { invocation ->
             invocation.getArgument<UserStock>(0)
         }
+        // K2는 writeValueAsString() 리턴값에도 null-check를 생성.
+        Mockito.lenient().`when`(objectMapper.writeValueAsString(any())).thenReturn("{}")
     }
 
     private fun mockPrice(stockCode: String, price: Long): RealtimeStockPrice =
