@@ -4,6 +4,7 @@ import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.entity.UserStock
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.asset.repository.UserStockRepository
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.global.security.SecurityUser
 import com.back.together02be.infra.kis.rest.KisPriceClient
 import com.back.together02be.infra.kis.rest.dto.KisPriceRes
@@ -70,10 +71,10 @@ class AssetControllerTest : ControllerTestSupport() {
 
         // 2. 이미 존재하는 Stock을 조회
         val samsung = stockRepository.findByStockCode("005930")
-            .orElseThrow { RuntimeException("삼성전자 데이터가 존재하지 않습니다.") }
+            .getOrThrow { RuntimeException("삼성전자 데이터가 존재하지 않습니다.") }
 
         val hynix = stockRepository.findByStockCode("000660")
-            .orElseThrow { RuntimeException("SK하이닉스 데이터가 존재하지 않습니다.") }
+            .getOrThrow { RuntimeException("SK하이닉스 데이터가 존재하지 않습니다.") }
 
         // 3. 테스트에 필요한 유저 데이터만 생성
         testUser = usersRepository.save(Users("user1", "1234", "my_nick"))

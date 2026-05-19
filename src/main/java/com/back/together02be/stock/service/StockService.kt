@@ -1,5 +1,6 @@
 package com.back.together02be.stock.service
 
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.stock.dto.response.StockListRes
 import com.back.together02be.stock.dto.response.StockPriceRes
 import com.back.together02be.stock.entity.Stock
@@ -110,6 +111,6 @@ class StockService(
 
     private fun findStock(stockCode: String): Stock =
         stockRepository.findByStockCode(stockCode)
-            .orElseThrow { EntityNotFoundException("존재하지 않는 종목코드입니다: $stockCode") }
+            .getOrThrow { EntityNotFoundException("존재하지 않는 종목코드입니다: $stockCode") }
 
 }
