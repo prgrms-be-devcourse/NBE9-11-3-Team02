@@ -27,7 +27,7 @@ public class KisTokenService {
     // 지터 범위 ±10초
     private static final long JITTER_MILLIS = 10_000L;
 
-    //재시도 횟수 제한
+    //재시도 횟수 최대 3번으로 제한
     private static final int MAX_RETRIES = 3;
 
     @Value("${kis.app-key}")
@@ -59,10 +59,9 @@ public class KisTokenService {
     }
 
     private String issueAndSaveNewTokenWithRetry() {
-        // 💡 while(true) 대신 최대 3번까지만 도는 for문으로 변경
+        // while(true) 대신 최대 3번까지만 도는 for문으로 변경
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
-                // 💡 [중요] 3단계에서 쪼갤 메서드 두 개를 여기서 호출하도록 변경!
                 KisTokenRes tokenResponse = fetchTokenFromApi(); // 외부 API 호출 (트랜잭션 X)
                 return saveTokenToDb(tokenResponse);             // DB 저장 (트랜잭션 O)
 
@@ -70,7 +69,7 @@ public class KisTokenService {
                 String responseBody = e.getResponseBodyAsString();
                 if (responseBody != null && responseBody.contains("EGW00133")) {
                     log.warn("KIS 접근 토큰 발급 제한 응답 발생 (attempt={}/{}).", attempt, MAX_RETRIES);
-                    if (attempt == MAX_RETRIES) throw e; // 💡 3번 꽉 채우면 예외 던짐
+                    if (attempt == MAX_RETRIES) throw e; // 재시도 횟수 3번 넘어가면 예외처리
                     sleepRetryInterval(attempt);
                     continue;
                 }
@@ -78,7 +77,7 @@ public class KisTokenService {
             } catch (Exception e) {
                 log.warn("KIS 접근 토큰 발급 실패 (attempt={}/{}).", attempt, MAX_RETRIES);
                 if (attempt == MAX_RETRIES) {
-                    throw new IllegalStateException("토큰 발급 최대 재시도 횟수 초과", e); // 💡 실패 처리
+                    throw new IllegalStateException("토큰 발급 최대 재시도 횟수 초과", e); // 실패 처리
                 }
                 sleepRetryInterval(attempt);
             }
@@ -86,7 +85,7 @@ public class KisTokenService {
         throw new IllegalStateException("토큰 발급 실패");
     }
 
-    // 1. 외부 API 통신 전용 (트랜잭션 없음!)
+    // 1. 외부 API 통신 전용 (트랜잭션 없음)
     private KisTokenRes fetchTokenFromApi() {
         String url = restBaseUrl + "/oauth2/tokenP";
         Map<String, String> requestBody = Map.of(
