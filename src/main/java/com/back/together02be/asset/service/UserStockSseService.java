@@ -20,7 +20,31 @@ public class UserStockSseService {
     private final Map<String, List<SseEmitter>> emittersMap = new ConcurrentHashMap<>();
 
     public SseEmitter createEmitter() {
-        return new SseEmitter(10 * 60 * 1000L);
+        SseEmitter emitter = new SseEmitter(10 * 60 * 1000L); // 10분
+
+        // 생명주기 콜백 등록
+        emitter.onCompletion(() -> {
+            log.info("SSE 연결 종료 (onCompletion)");
+            removeEmitterGlobally(emitter);
+        });
+        emitter.onTimeout(() -> {
+            log.warn("SSE 연결 타임아웃 (onTimeout)");
+            emitter.complete();
+            removeEmitterGlobally(emitter);
+        });
+        emitter.onError((e) -> {
+            log.error("SSE 연결 에러 (onError): {}", e.getMessage());
+            removeEmitterGlobally(emitter);
+        });
+
+        return emitter;
+    }
+
+    // 콜백 호출 시 모든 종목에서 해당 Emitter 일괄 제거
+    private void removeEmitterGlobally(SseEmitter targetEmitter) {
+        emittersMap.forEach((stockCode, emitters) -> {
+            emitters.remove(targetEmitter);
+        });
     }
 
     public void addEmitter(String stockCode, SseEmitter emitter) {
