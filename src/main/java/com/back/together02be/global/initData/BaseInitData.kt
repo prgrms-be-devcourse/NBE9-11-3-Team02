@@ -6,6 +6,7 @@ import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.entity.UserStock
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.asset.repository.UserStockRepository
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.ranking.service.RankingSeasonService
 import com.back.together02be.stock.entity.Stock
 import com.back.together02be.stock.entity.StockMarket
@@ -195,15 +196,15 @@ class BaseInitData(
 
 
         val samsung = stockRepository.findByStockCode("005930")
-            .orElseThrow { IllegalStateException("삼성전자 없음") }
+            .getOrThrow { IllegalStateException("삼성전자 없음") }
         val skhynix = stockRepository.findByStockCode("000660")
-            .orElseThrow { IllegalStateException("SK하이닉스 없음") }
+            .getOrThrow { IllegalStateException("SK하이닉스 없음") }
         val naver = stockRepository.findByStockCode("035420")
-            .orElseThrow { IllegalStateException("NAVER 없음") }
+            .getOrThrow { IllegalStateException("NAVER 없음") }
         val kakao = stockRepository.findByStockCode("035720")
-            .orElseThrow { IllegalStateException("카카오 없음") }
+            .getOrThrow { IllegalStateException("카카오 없음") }
         val lgChem = stockRepository.findByStockCode("051910")
-            .orElseThrow { IllegalStateException("LG화학 없음") }
+            .getOrThrow { IllegalStateException("LG화학 없음") }
 
         // 수익 유저
         userStockRepository.save<UserStock>(UserStock(plus1, samsung, 50L, 70000L))
