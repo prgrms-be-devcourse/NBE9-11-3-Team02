@@ -125,8 +125,10 @@ class TradeSellProcessor(
         val trade = Trade.sell(account.users, stock, request.quantity, price, profit)
         tradeRepository.save(trade)
 
+        val savedTrade = tradeRepository.save(trade)
+
         return TradeSellRes(
-            tradeId = trade.id,
+            tradeId = savedTrade.id,
             stockName = stock.stockName,
             quantity = request.quantity,
             price = price,
