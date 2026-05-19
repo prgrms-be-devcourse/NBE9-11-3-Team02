@@ -45,19 +45,31 @@ public class KisTokenService {
 
     private final KisTokenWriter kisTokenWriter;
 
+    // 락을 위한 전용 객체 생성
+    private final Object tokenIssueLock = new Object();
+
     // 사용 가능한 토큰이 있으면 재사용, 없으면 새로 발급
     public String getAccessToken() {
         KisAccessToken savedToken = kisAccessTokenRepository.findTopByOrderByIdDesc()
                 .orElse(null);
 
-        //유효한 최근 토큰이 있으면 그대로 반환
+        // 1. 락 없이 1차 확인 (평소 조회 시에는 여기서 바로 리턴되어 병목 없음)
         if (savedToken != null && savedToken.isUsable()) {
-            log.info("KIS 접근 토큰 재사용. expiresAt={}", savedToken.getExpiresAt());
             return savedToken.getAccessToken();
         }
 
-        //유효한 토큰이 없으면 재시도 포함 신규 발급
-        return issueAndSaveNewTokenWithRetry();
+        // 2. 토큰이 없을 때만 최소 범위로 락을 잡음
+        synchronized (tokenIssueLock) {
+            // 3. 락 안에서 2차 확인 (내가 락을 기다리는 동안 앞선 요청이 이미 토큰을 발급했을 수 있음)
+            KisAccessToken latestToken = kisAccessTokenRepository.findTopByOrderByIdDesc().orElse(null);
+            if (latestToken != null && latestToken.isUsable()) {
+                log.info("KIS 접근 토큰 대기 후 재사용. expiresAt={}", latestToken.getExpiresAt());
+                return latestToken.getAccessToken();
+            }
+
+            // 진짜 아무도 발급을 안 했을 때만 외부 통신 시작
+            return issueAndSaveNewTokenWithRetry();
+        }
     }
 
     private String issueAndSaveNewTokenWithRetry() {

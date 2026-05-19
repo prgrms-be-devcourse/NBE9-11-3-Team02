@@ -18,12 +18,14 @@ public class KisTokenWriter {
 
     @Transactional
     public String saveTokenToDb(KisTokenRes tokenResponse) {
-        if (tokenResponse == null || tokenResponse.accessToken() == null) {
-            throw new IllegalStateException("토큰 발급 실패");
+        if (tokenResponse == null
+                || tokenResponse.accessToken() == null
+                || tokenResponse.expiresIn() == null) {
+            throw new IllegalStateException("KIS 토큰 발급 응답이 올바르지 않습니다.");
         }
 
         LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(tokenResponse.expiresIn() == null ? 0 : tokenResponse.expiresIn());
+                .plusSeconds(tokenResponse.expiresIn());
 
         KisAccessToken tokenEntity = kisAccessTokenRepository.findTopByOrderByIdDesc().orElse(null);
 
