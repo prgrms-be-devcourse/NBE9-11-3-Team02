@@ -83,8 +83,11 @@ class TradeSellProcessor(
         }
         val price = stockPrice.price.toLong()
 
+        val expectedPrice = request.expectedPrice
+            ?: throw IllegalArgumentException("매도 기대 가격(expectedPrice)은 필수 값입니다.")
+
         // 슬리피지 검증 0.98을 BigDecimal로 표현
-        val minPrice = BigDecimal.valueOf(request.expectedPrice)
+        val minPrice = BigDecimal.valueOf(expectedPrice)
             .multiply(SELL_TOLERANCE_RATE)
             .setScale(0, RoundingMode.FLOOR)
 

@@ -11,6 +11,7 @@ import com.back.together02be.stock.entity.StockMarket
 import com.back.together02be.stock.repository.StockRepository
 import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.trade.dto.request.TradeSellReq
+import com.back.together02be.trade.entity.Trade
 import com.back.together02be.trade.repository.TradeRepository
 import com.back.together02be.users.entity.Users
 import org.assertj.core.api.Assertions.assertThat
@@ -21,6 +22,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.test.util.ReflectionTestUtils
 import java.time.Clock
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -95,6 +97,10 @@ class TradeSellProcessorTest {
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
 
+        val mockTrade = Trade.sell(account.users, stock, 10L, 55000L, 450000L)
+        ReflectionTestUtils.setField(mockTrade, "id", 1L)
+        given(tradeRepository.save(any())).willReturn(mockTrade)
+
         // when
         val res = tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 10L, 50000L))
 
@@ -113,13 +119,17 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
+        val nowTime = "100000"
         given(stockPriceStore.get(stock.stockCode)).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
+
+        val mockTrade = Trade.sell(account.users, stock, 20L, 55000L, 900000L)
+        ReflectionTestUtils.setField(mockTrade, "id", 2L)
+        given(tradeRepository.save(any())).willReturn(mockTrade)
 
         // when
         tradeSellProcessor.processSell(1L, TradeSellReq(1L, 10L, 20L, 50000L))
@@ -159,8 +169,8 @@ class TradeSellProcessorTest {
         val account = UserAccount(dummyUser, 1000000L, 0L)
         mockCommonDependencies(stock, userStock, account)
 
-        val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
-        given(stockPriceStore.get(any())).willReturn(
+        val nowTime = "100000"
+        given(stockPriceStore.get(anyString())).willReturn(
             RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(0)

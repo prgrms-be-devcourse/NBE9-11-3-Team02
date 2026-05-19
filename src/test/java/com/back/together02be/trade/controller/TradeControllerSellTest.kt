@@ -235,7 +235,7 @@ class TradeControllerSellTest : ControllerTestSupport(){
                             "userId": 1,
                             "stockId": 999,
                             "quantity": 1,
-                            "price": 75000
+                            "expectedPrice": 75000
                         }
                         """.trimIndent()
                     )
@@ -296,7 +296,7 @@ class TradeControllerSellTest : ControllerTestSupport(){
                             "userId": 1,
                             "stockId": 1,
                             "quantity": 0,
-                            "price": 75000
+                            "expectedPrice": 75000
                         }
                         """.trimIndent()
                     )
