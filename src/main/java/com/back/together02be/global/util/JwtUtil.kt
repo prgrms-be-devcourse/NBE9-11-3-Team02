@@ -4,10 +4,9 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import java.nio.charset.StandardCharsets
 import java.security.Key
-import java.util.Date
+import java.util.*
 
 object JwtUtil {
-    @JvmStatic
     fun generateAccessToken(
         secret: String,
         expireSeconds: Long,
@@ -32,7 +31,6 @@ object JwtUtil {
             .compact()
     }
 
-    @JvmStatic
     fun isValid(token: String?, secret: String): Boolean {
         val secretKey = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
 
@@ -49,7 +47,6 @@ object JwtUtil {
         }
     }
 
-    @JvmStatic
     @Suppress("UNCHECKED_CAST")
     fun payloadOrNull(token: String?, secret: String): Map<String, Any>? {
         val secretKey = Keys.hmacShaKeyFor(secret.toByteArray(StandardCharsets.UTF_8))
