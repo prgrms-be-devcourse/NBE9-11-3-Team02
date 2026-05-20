@@ -23,7 +23,7 @@ class AssetService(
     // 예수금 조회 메서드
     fun getDeposit(userId: Long): Long {
         val userAccount = userAccountRepository.findByUsersId(userId)
-            .orElseThrow { IllegalArgumentException("계좌 없음") }
+            ?: throw IllegalArgumentException("계좌 없음")
         return userAccount.deposit
     }
 
@@ -49,8 +49,8 @@ class AssetService(
 
     // 총 매수 금액 조회 메서드
     fun getTotalAmountByUserId(userId: Long): Long {
-        return userAccountRepository.findByUsersId(userId)
-            .orElseThrow { RuntimeException("계좌 없음") }
+        return (userAccountRepository.findByUsersId(userId)
+            ?: throw RuntimeException("계좌 없음"))
             .totalPurchase
     }
 

@@ -3,17 +3,12 @@ package com.back.together02be.asset.repository
 import com.back.together02be.asset.entity.UserAccount
 import jakarta.persistence.LockModeType
 import jakarta.persistence.QueryHint
-import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.data.jpa.repository.Lock
-import org.springframework.data.jpa.repository.Modifying
-import org.springframework.data.jpa.repository.Query
-import org.springframework.data.jpa.repository.QueryHints
+import org.springframework.data.jpa.repository.*
 import org.springframework.data.repository.query.Param
-import java.util.Optional
 
 interface UserAccountRepository : JpaRepository<UserAccount, Long> {
 
-    fun findByUsersId(usersId: Long): Optional<UserAccount>
+    fun findByUsersId(usersId: Long): UserAccount?
 
     // 비관적 락 설정
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -24,7 +19,9 @@ interface UserAccountRepository : JpaRepository<UserAccount, Long> {
         )
     )
     @Query("SELECT ua FROM UserAccount ua WHERE ua.users.id = :usersId")
-    fun findByUsersIdWithLock(@Param("usersId") usersId: Long): Optional<UserAccount>
+    fun findByUsersIdWithLock(
+        @Param("usersId") usersId: Long
+    ): UserAccount?
 
     @Modifying(clearAutomatically = true)
     @Query(

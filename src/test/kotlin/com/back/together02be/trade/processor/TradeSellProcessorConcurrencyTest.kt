@@ -144,7 +144,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
                     val remain = userStockRepository
                         .findByUsersIdAndStockId(userId, stockId)
-                        .orElse(null)?.quantity ?: 0L
+                        ?.quantity ?: 0L
                     println("[Thread-$threadId] ✅ 매도 성공 → 남은 수량: $remain")
 
                 } catch (e: IllegalStateException) {
@@ -166,7 +166,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
         val finalQuantity = userStockRepository
             .findByUsersIdAndStockId(userId, stockId)
-            .orElse(null)?.quantity ?: 0L
+            ?.quantity ?: 0L
 
         println("=== 동시성 테스트 결과 ===")
         println("성공한 매도 수: ${successCount.get()}")
@@ -212,14 +212,14 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
 
                     val remain = userStockRepository
                         .findByUsersIdAndStockId(userId, stockId)
-                        .orElse(null)?.quantity ?: 0L
+                        ?.quantity ?: 0L
                     println("[Thread-$threadId] ✅ 성공 → 보유 수량: ${remain}주")
 
                 } catch (e: Exception) {
                     failCount.incrementAndGet()
                     val remain = userStockRepository
                         .findByUsersIdAndStockId(userId, stockId)
-                        .orElse(null)?.quantity ?: 0L
+                        ?.quantity ?: 0L
                     println("[Thread-$threadId] ❌ 실패 → 보유 수량: ${remain}주")
                 } finally {
                     doneLatch.countDown()
@@ -240,9 +240,9 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         assertThat(failCount.get()).isEqualTo(threadCount - 1)
 
         val deletedStock = userStockRepository.findByUsersIdAndStockId(userId, stockId)
-        val finalQuantity = deletedStock.map { it.quantity }.orElse(0L)
+        val finalQuantity = deletedStock?.quantity ?: 0L
         println("최종 보유 수량: ${finalQuantity}주")
 
-        assertThat(deletedStock).isEmpty
+        assertThat(deletedStock).isNull()
     }
 }
