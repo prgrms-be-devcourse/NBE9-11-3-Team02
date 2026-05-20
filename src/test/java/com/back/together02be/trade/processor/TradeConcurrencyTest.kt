@@ -21,10 +21,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -57,11 +57,15 @@ class TradeConcurrencyTest : IntegrationTestSupport() {
         user = usersRepository.save(Users("concurrency_user", "pw", "동시성테스트유저"))
         stock = stockRepository.save(Stock("999999", "테스트종목", StockMarket.KOSPI))
 
-        Mockito.`when`(stockPriceStore.get("999999")).thenReturn(
-            RealtimeStockPrice.builder()
-                .stockCode("999999")
-                .price("70000")
-                .build()
+        whenever(stockPriceStore.get("999999")).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "999999",
+                price = "70000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = null
+            )
         )
     }
 

@@ -46,11 +46,14 @@ class AssetServiceTest {
         val stock1 = Stock("005930", "삼성전자", StockMarket.KOSPI)
         val userStock1 = UserStock(user, stock1, 10L, 50000L)
 
-        // RealtimeStockPrice가 아직 Java 코드로 남아있다면 기존 Builder를 그대로 사용합니다.
-        val mockPrice = RealtimeStockPrice.builder()
-            .stockCode("005930")
-            .price("75000")
-            .build()
+        val mockPrice = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "75000",
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
         // 코틀린에서 when은 예약어이므로 백틱(`)으로 감싸서 호출해야 합니다.
         `when`(userStockRepository.findAllByUsersId(userId)).thenReturn(listOf(userStock1))

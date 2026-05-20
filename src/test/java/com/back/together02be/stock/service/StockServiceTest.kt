@@ -210,11 +210,15 @@ internal class StockServiceTest {
         ReflectionTestUtils.setField(stock, "id", 1L)
         given(stockRepository.findAll()).willReturn(listOf(stock))
 
-        val price = RealtimeStockPrice.builder()
-            .stockCode("005930")
-            .price("70000")
-            .changeRate("2.19")
-            .build()
+        val price = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "70000",
+            changeSign = "",
+            change = "",
+            changeRate = "2.19",
+            tradeTime = null
+        )
+
         given(rtStockPriceStore.get("005930")).willReturn(price)
 
         // when
@@ -239,8 +243,15 @@ internal class StockServiceTest {
         given(stockRepository.findAll()).willReturn(listOf(stock1, stock2))
         given(rtStockPriceStore.get("000660")).willReturn(null) // 캐시 없음
 
-        val badPrice = RealtimeStockPrice.builder()
-            .stockCode("035420").price("abc").changeRate("rate").build()
+        val badPrice = RealtimeStockPrice(
+            stockCode = "035420",
+            price = "abc",
+            changeSign = "",
+            change = "",
+            changeRate = "rate",
+            tradeTime = null
+        )
+
         given(rtStockPriceStore.get("035420")).willReturn(badPrice) // 숫자 파싱 실패
 
         // when

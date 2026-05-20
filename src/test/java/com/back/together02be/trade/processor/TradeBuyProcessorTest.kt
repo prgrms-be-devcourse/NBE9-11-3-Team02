@@ -15,7 +15,6 @@ import com.back.together02be.trade.dto.BuyReq
 import com.back.together02be.trade.entity.Trade
 import com.back.together02be.trade.repository.TradeRepository
 import com.back.together02be.users.entity.Users
-import tools.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityNotFoundException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
@@ -23,18 +22,18 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.ArgumentMatchers.anyLong
-import org.mockito.ArgumentMatchers.anyString
+import org.mockito.ArgumentMatchers.*
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.test.util.ReflectionTestUtils
+import tools.jackson.databind.ObjectMapper
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Optional
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class TradeBuyProcessorTest {
@@ -85,10 +84,14 @@ class TradeBuyProcessorTest {
     }
 
     private fun mockPrice(stockCode: String, price: Long): RealtimeStockPrice =
-        RealtimeStockPrice.builder()
-            .stockCode(stockCode)
-            .price(price.toString())
-            .build()
+        RealtimeStockPrice(
+            stockCode = stockCode,
+            price = price.toString(),
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
     @Test
     @DisplayName("정상 매수 (신규 보유종목) — 잔고 차감 쿼리 호출, 거래 내역·UserStock 저장")
@@ -181,12 +184,15 @@ class TradeBuyProcessorTest {
         val staleTime = LocalDateTime.now().minusSeconds(11)
             .format(DateTimeFormatter.ofPattern("HHmmss"))
 
-        Mockito.`when`(stockPriceStore.get("005930")).thenReturn(
-            RealtimeStockPrice.builder()
-                .stockCode("005930")
-                .price("70000")
-                .tradeTime(staleTime)
-                .build()
+        whenever(stockPriceStore.get("005930")).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "005930",
+                price = "70000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = staleTime
+            )
         )
 
         assertThatThrownBy { tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, 10L, 70_000L)) }
@@ -200,13 +206,17 @@ class TradeBuyProcessorTest {
         val freshTime = LocalDateTime.now()
             .format(DateTimeFormatter.ofPattern("HHmmss"))
 
-        Mockito.`when`(stockPriceStore.get("005930")).thenReturn(
-            RealtimeStockPrice.builder()
-                .stockCode("005930")
-                .price("70000")
-                .tradeTime(freshTime)
-                .build()
+        whenever(stockPriceStore.get("005930")).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "005930",
+                price = "70000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = freshTime
+            )
         )
+
         Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(Optional.empty())
 
         val response = tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, 10L, 70_000L))

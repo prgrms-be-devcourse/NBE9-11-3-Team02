@@ -10,7 +10,6 @@ data class UserStockRes(
     val currentPrice: Long
 ) {
     companion object {
-        @JvmStatic
         fun from(userStock: UserStock, currentPrice: Long) = UserStockRes(
             stockCode = userStock.stock.stockCode,
             stockName = userStock.stock.stockName,

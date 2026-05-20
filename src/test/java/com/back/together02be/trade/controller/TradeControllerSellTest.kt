@@ -89,14 +89,15 @@ class TradeControllerSellTest : ControllerTestSupport(){
         userAccountRepository.saveAndFlush(userAccount)
 
         // 주가 데이터
-        val samsungPrice = RealtimeStockPrice.builder()
-            .stockCode("005930")
-            .price("75000")
-            .changeSign("1")
-            .change("1")
-            .changeRate("3")
-            .tradeTime(LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss")))
-            .build()
+        val samsungPrice = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "75000",
+            changeSign = "1",
+            change = "1",
+            changeRate = "3",
+            tradeTime = LocalTime.of(10, 0).format(DateTimeFormatter.ofPattern("HHmmss"))
+        )
+
         realtimeStockPriceService.put("005930", samsungPrice)
     }
     @AfterEach
@@ -181,14 +182,15 @@ class TradeControllerSellTest : ControllerTestSupport(){
     @Test
     @DisplayName("매도 성공 - 손실 매도 (현재가 < 평단가)")
     fun t3() {
-        val lossPrice = RealtimeStockPrice.builder()
-            .stockCode("005930")
-            .price("60000")
-            .changeSign("1")
-            .change("1")
-            .changeRate("3")
-            .tradeTime(LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss")))
-            .build()
+        val lossPrice = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "60000",
+            changeSign = "1",
+            change = "1",
+            changeRate = "3",
+            tradeTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HHmmss"))
+        )
+
         realtimeStockPriceService.put("005930", lossPrice)
 
         val result: ResultActions = mockMvc

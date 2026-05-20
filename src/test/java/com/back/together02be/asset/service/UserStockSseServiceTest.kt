@@ -33,10 +33,14 @@ class UserStockSseServiceTest {
         userStockSseService.addEmitter(stockCode, mockEmitter)
 
         // Store에서 현재가 70,000원이 조회된다고 가정
-        val mockPrice = RealtimeStockPrice.builder()
-            .stockCode(stockCode)
-            .price("70000")
-            .build()
+        val mockPrice = RealtimeStockPrice(
+            stockCode = stockCode,
+            price = "70000",
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
         // when은 코틀린의 예약어이므로 백틱(`)으로 감싸서 호출합니다.
         `when`(priceStore.get(stockCode)).thenReturn(mockPrice)
@@ -56,10 +60,14 @@ class UserStockSseServiceTest {
         val mockEmitter = mock(SseEmitter::class.java)
         userStockSseService.addEmitter(stockCode, mockEmitter)
 
-        val mockPrice = RealtimeStockPrice.builder()
-            .stockCode(stockCode)
-            .price("70000")
-            .build()
+        val mockPrice = RealtimeStockPrice(
+            stockCode = stockCode,
+            price = "70000",
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
         `when`(priceStore.get(stockCode)).thenReturn(mockPrice)
 

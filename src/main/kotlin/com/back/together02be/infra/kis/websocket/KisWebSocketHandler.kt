@@ -132,14 +132,14 @@ class KisWebSocketHandler(
 
         val fields = parts[3].split("^")
 
-        val stockPrice = RealtimeStockPrice.builder()
-            .stockCode(fields[KisConstants.FIELD_STOCK_CODE]) // 종목 코드
-            .tradeTime(fields[KisConstants.FIELD_TRADE_TIME]) // 체결 시간
-            .price(fields[KisConstants.FIELD_CURRENT_PRICE]) // 주식 현재가
-            .changeSign(fields[KisConstants.FIELD_CHANGE_SIGN]) // 전일 대비 부호
-            .change(fields[KisConstants.FIELD_CHANGE]) // 전일 대비
-            .changeRate(fields[KisConstants.FIELD_CHANGE_RATE]) // 전일 대비율
-            .build()
+        val stockPrice = RealtimeStockPrice(
+            stockCode = fields[KisConstants.FIELD_STOCK_CODE],   // 종목 코드
+            tradeTime = fields[KisConstants.FIELD_TRADE_TIME],   // 체결 시간
+            price = fields[KisConstants.FIELD_CURRENT_PRICE],    // 주식 현재가
+            changeSign = fields[KisConstants.FIELD_CHANGE_SIGN], // 전일 대비 부호
+            change = fields[KisConstants.FIELD_CHANGE],          // 전일 대비
+            changeRate = fields[KisConstants.FIELD_CHANGE_RATE]  // 전일 대비율
+        )
 
         rtStockPriceStore.put(stockPrice.stockCode, stockPrice) // 캐싱
         // log.info("[{}] 체결시간: {}, 현재가: {}원 | 전일 대비 부호: {} | 전일 대비 가격: {} | 전일 대비율: {}",

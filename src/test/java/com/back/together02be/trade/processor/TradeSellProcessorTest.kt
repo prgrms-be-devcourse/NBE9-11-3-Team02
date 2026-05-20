@@ -22,6 +22,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.test.util.ReflectionTestUtils
 import java.time.Clock
 import java.time.LocalDateTime
@@ -90,8 +91,15 @@ class TradeSellProcessorTest {
         mockCommonDependencies(stock, userStock, account)
 
         val nowTime = "100000"
-        given(stockPriceStore.get(stock.stockCode)).willReturn(
-            RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
+        whenever(stockPriceStore.get(stock.stockCode)).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "",
+                price = "55000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = nowTime
+            )
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
@@ -120,8 +128,15 @@ class TradeSellProcessorTest {
         mockCommonDependencies(stock, userStock, account)
 
         val nowTime = "100000"
-        given(stockPriceStore.get(stock.stockCode)).willReturn(
-            RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
+        whenever(stockPriceStore.get(stock.stockCode)).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "",
+                price = "55000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = nowTime
+            )
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
@@ -149,8 +164,15 @@ class TradeSellProcessorTest {
         mockCommonDependencies(stock, userStock, account)
 
         val nowTime = LocalTime.now(fixedClock).format(DateTimeFormatter.ofPattern("HHmmss"))
-        given(stockPriceStore.get(stock.stockCode)).willReturn(
-            RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
+        whenever(stockPriceStore.get(stock.stockCode)).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "",
+                price = "55000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = nowTime
+            )
         )
 
         // when & then (JUnit5 assertThrows 코틀린 스타일 스타일화)
@@ -170,8 +192,15 @@ class TradeSellProcessorTest {
         mockCommonDependencies(stock, userStock, account)
 
         val nowTime = "100000"
-        given(stockPriceStore.get(anyString())).willReturn(
-            RealtimeStockPrice.builder().price("55000").tradeTime(nowTime).build()
+        whenever(stockPriceStore.get(anyString())).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "",
+                price = "55000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = nowTime
+            )
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(0)
 

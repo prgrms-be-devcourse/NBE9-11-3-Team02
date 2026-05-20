@@ -9,7 +9,6 @@ import com.back.together02be.global.security.SecurityUser
 import com.back.together02be.infra.kis.rest.KisPriceClient
 import com.back.together02be.infra.kis.rest.dto.KisPriceRes
 import com.back.together02be.infra.kis.rest.service.KisTokenService
-import com.back.together02be.stock.entity.Stock
 import com.back.together02be.stock.repository.StockRepository
 import com.back.together02be.support.ControllerTestSupport
 import com.back.together02be.users.entity.Users
@@ -21,18 +20,14 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
 import org.springframework.test.web.servlet.result.MockMvcResultHandlers.print
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user
 
 class AssetControllerTest : ControllerTestSupport() {
-
-    @Autowired
-    private lateinit var mockMvc: MockMvc
 
     @MockitoBean
     private lateinit var kisTokenService: KisTokenService

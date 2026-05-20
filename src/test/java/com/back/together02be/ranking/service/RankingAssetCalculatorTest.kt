@@ -16,6 +16,7 @@ import org.mockito.BDDMockito.given
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.mockito.kotlin.whenever
 import org.springframework.test.util.ReflectionTestUtils
 
 @ExtendWith(MockitoExtension::class)
@@ -34,8 +35,14 @@ internal class RankingAssetCalculatorTest {
     @Test
     @DisplayName("실시간 현재가가 정상 문자열이면 파싱된 현재가를 반환한다")
     fun 정상_현재가_파싱() {
-        val price = RealtimeStockPrice.builder()
-            .stockCode("005930").price("70000").build()
+        val price = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "70000",
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
         val result = rankingAssetCalculator.extractCurrentPrice(price, 60000L)
         assertThat(result).isEqualTo(70000L)
@@ -44,8 +51,14 @@ internal class RankingAssetCalculatorTest {
     @Test
     @DisplayName("실시간 현재가가 비정상(문자열 등)이면 평균 매입가를 반환한다")
     fun 비정상_현재가_대체() {
-        val price = RealtimeStockPrice.builder()
-            .stockCode("005930").price("이상한값").build()
+        val price = RealtimeStockPrice(
+            stockCode = "005930",
+            price = "이상한값",
+            changeSign = "",
+            change = "",
+            changeRate = "",
+            tradeTime = null
+        )
 
         val result = rankingAssetCalculator.extractCurrentPrice(price, 60000L)
         assertThat(result).isEqualTo(60000L)
@@ -67,8 +80,15 @@ internal class RankingAssetCalculatorTest {
         given(userStockRepository.findAllByUsersId(1L))
             .willReturn(listOf(userStock))
 
-        given(realTimeStockPriceStore.get("005930")).willReturn(
-            RealtimeStockPrice.builder().price("70000").build() // 실시간가 7만 (총 70만)
+        whenever(realTimeStockPriceStore.get("005930")).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "",
+                price = "70000", // 실시간가 7만 (총 70만)
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = null
+            )
         )
 
         // when

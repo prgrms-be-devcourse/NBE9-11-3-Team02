@@ -21,10 +21,10 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
+import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -57,11 +57,15 @@ class TradeIdempotencyIntegrationTest : IntegrationTestSupport() {
         stock = stockRepository.save(Stock("888888", "멱등성테스트종목", StockMarket.KOSPI))
         userAccountRepository.save(UserAccount(user, 0L, 10_000_000L))
 
-        Mockito.`when`(stockPriceStore.get("888888")).thenReturn(
-            RealtimeStockPrice.builder()
-                .stockCode("888888")
-                .price("70000")
-                .build()
+        whenever(stockPriceStore.get("888888")).thenReturn(
+            RealtimeStockPrice(
+                stockCode = "888888",
+                price = "70000",
+                changeSign = "",
+                change = "",
+                changeRate = "",
+                tradeTime = null
+            )
         )
     }
 

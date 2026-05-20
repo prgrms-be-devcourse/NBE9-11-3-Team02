@@ -12,7 +12,6 @@ import com.back.together02be.stock.service.RealTimeStockPriceStore
 import com.back.together02be.support.IntegrationTestSupport
 import com.back.together02be.trade.dto.request.TradeSellReq
 import com.back.together02be.trade.repository.TradeRepository
-import com.back.together02be.trade.util.MarketTimeValidator
 import com.back.together02be.users.entity.Users
 import com.back.together02be.users.repository.UsersRepository
 import org.assertj.core.api.Assertions.assertThat
@@ -27,15 +26,12 @@ import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.time.Clock
 import java.time.LocalDateTime
-import java.time.LocalTime
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import org.mockito.BDDMockito.given
 
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -101,14 +97,14 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         userStockRepository.saveAndFlush(userStock)
 
         val currentTime = "100000"
-        val realtimePrice = RealtimeStockPrice.builder()
-            .stockCode("005930")
-            .price(STOCK_PRICE.toString())
-            .changeSign("3")
-            .change("0")
-            .changeRate("0.00")
-            .tradeTime(currentTime)
-            .build()
+        val realtimePrice = RealtimeStockPrice(
+            stockCode = "005930",
+            price = STOCK_PRICE.toString(),
+            changeSign = "3",
+            change = "0",
+            changeRate = "0.00",
+            tradeTime = currentTime
+        )
         stockPriceStore.put("005930", realtimePrice)
     }
 
