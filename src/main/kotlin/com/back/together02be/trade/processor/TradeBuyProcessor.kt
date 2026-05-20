@@ -11,12 +11,12 @@ import com.back.together02be.trade.dto.BuyReq
 import com.back.together02be.trade.dto.BuyRes
 import com.back.together02be.trade.entity.Trade
 import com.back.together02be.trade.repository.TradeRepository
-import tools.jackson.databind.ObjectMapper
 import jakarta.persistence.EntityNotFoundException
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Isolation
 import org.springframework.transaction.annotation.Transactional
+import tools.jackson.databind.ObjectMapper
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -66,16 +66,16 @@ class TradeBuyProcessor(
         val updated = userAccountRepository.decreaseDepositIfSufficient(userId, amount)
         if (updated == 0) {
             val accountForMsg = userAccountRepository.findByUsersId(userId)
-                .orElseThrow { EntityNotFoundException("계좌 정보가 없습니다.") }
+                ?: throw EntityNotFoundException("계좌 정보가 없습니다.")
             throw IllegalStateException(
                 "잔고가 부족합니다. (필요: %,d원 / 보유: %,d원)".format(amount, accountForMsg.deposit)
             )
         }
 
         val account = userAccountRepository.findByUsersIdWithLock(userId)
-            .orElseThrow { EntityNotFoundException("계좌 정보가 없습니다.") }
+            ?: throw EntityNotFoundException("계좌 정보가 없습니다.")
 
-        val userStock = userStockRepository.findByUsersIdAndStockId(userId, request.stockId).orElse(null)
+        val userStock = userStockRepository.findByUsersIdAndStockId(userId, request.stockId)
         if (userStock == null) {
             userStockRepository.save(UserStock(account.users, stock, request.quantity, price))
         } else {

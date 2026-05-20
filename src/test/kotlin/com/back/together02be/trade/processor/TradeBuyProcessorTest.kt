@@ -27,7 +27,6 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import org.mockito.kotlin.whenever
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.test.util.ReflectionTestUtils
 import tools.jackson.databind.ObjectMapper
@@ -68,7 +67,7 @@ class TradeBuyProcessorTest {
         Mockito.lenient().`when`(idempotencyKeyRepository.findByIdempotencyKey(anyString())).thenReturn(freshKey)
         Mockito.lenient().`when`(stockRepository.findById(1L)).thenReturn(Optional.of(stock))
         Mockito.lenient().`when`(userAccountRepository.decreaseDepositIfSufficient(anyLong(), anyLong())).thenReturn(1)
-        Mockito.lenient().`when`(userAccountRepository.findByUsersIdWithLock(1L)).thenReturn(Optional.of(account))
+        Mockito.lenient().`when`(userAccountRepository.findByUsersIdWithLock(1L)).thenReturn(account)
         Mockito.lenient().`when`(tradeRepository.save(any(Trade::class.java))).thenAnswer { invocation ->
             val trade = invocation.getArgument<Trade>(0)
             ReflectionTestUtils.setField(trade, "id", 1L)
@@ -101,7 +100,7 @@ class TradeBuyProcessorTest {
         val amount = price * quantity
 
         Mockito.`when`(stockPriceStore.get("005930")).thenReturn(mockPrice("005930", price))
-        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(Optional.empty())
+        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(null)
 
         val response = tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, quantity, 70_000L))
 
@@ -126,7 +125,7 @@ class TradeBuyProcessorTest {
         val existing = UserStock(user, stock, existingQty, existingAvgPrice)
 
         Mockito.`when`(stockPriceStore.get("005930")).thenReturn(mockPrice("005930", newPrice))
-        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(Optional.of(existing))
+        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(existing)
 
         tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, newQty, 70_000L))
 
@@ -144,7 +143,7 @@ class TradeBuyProcessorTest {
 
         Mockito.`when`(stockPriceStore.get("005930")).thenReturn(mockPrice("005930", price))
         Mockito.`when`(userAccountRepository.decreaseDepositIfSufficient(1L, amount)).thenReturn(0)
-        Mockito.`when`(userAccountRepository.findByUsersId(1L)).thenReturn(Optional.of(account))
+        Mockito.`when`(userAccountRepository.findByUsersId(1L)).thenReturn(account)
 
         assertThatThrownBy { tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, quantity, 70_000L)) }
             .isInstanceOf(IllegalStateException::class.java)
@@ -171,7 +170,7 @@ class TradeBuyProcessorTest {
         val currentPrice = 71_000L // 70000 * 1.02 = 71400, 71000 <= 71400
 
         Mockito.`when`(stockPriceStore.get("005930")).thenReturn(mockPrice("005930", currentPrice))
-        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(Optional.empty())
+        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(null)
 
         val response = tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, 10L, expectedPrice))
 
@@ -184,7 +183,7 @@ class TradeBuyProcessorTest {
         val staleTime = LocalDateTime.now().minusSeconds(11)
             .format(DateTimeFormatter.ofPattern("HHmmss"))
 
-        whenever(stockPriceStore.get("005930")).thenReturn(
+        Mockito.`when`(stockPriceStore.get("005930")).thenReturn(
             RealtimeStockPrice(
                 stockCode = "005930",
                 price = "70000",
@@ -206,7 +205,7 @@ class TradeBuyProcessorTest {
         val freshTime = LocalDateTime.now()
             .format(DateTimeFormatter.ofPattern("HHmmss"))
 
-        whenever(stockPriceStore.get("005930")).thenReturn(
+        Mockito.`when`(stockPriceStore.get("005930")).thenReturn(
             RealtimeStockPrice(
                 stockCode = "005930",
                 price = "70000",
@@ -216,8 +215,7 @@ class TradeBuyProcessorTest {
                 tradeTime = freshTime
             )
         )
-
-        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(Optional.empty())
+        Mockito.`when`(userStockRepository.findByUsersIdAndStockId(1L, 1L)).thenReturn(null)
 
         val response = tradeBuyProcessor.processBuy(1L, "test-key", BuyReq(1L, 10L, 70_000L))
 

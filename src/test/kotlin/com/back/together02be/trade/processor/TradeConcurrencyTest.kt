@@ -76,9 +76,9 @@ class TradeConcurrencyTest : IntegrationTestSupport() {
             tradeRepository.findAll().filter { it.stock.id == stock.id }
         )
         userStockRepository.findByUsersIdAndStockId(user.id, stock.id)
-            .ifPresent { userStockRepository.delete(it) }
+            ?.let { userStockRepository.delete(it) }
         userAccountRepository.findByUsersId(user.id)
-            .ifPresent { userAccountRepository.delete(it) }
+            ?.let { userAccountRepository.delete(it) }
         idempotencyKeyRepository.deleteAll(
             idempotencyKeyRepository.findAll().filter { it.userId == user.id }
         )
@@ -134,7 +134,8 @@ class TradeConcurrencyTest : IntegrationTestSupport() {
         executor.shutdown()
 
         // then
-        val result = userAccountRepository.findByUsersId(user.id).orElseThrow()
+        val result = userAccountRepository.findByUsersId(user.id)
+            ?: throw NoSuchElementException()
         assertThat(successCount.get()).isEqualTo(1)
         assertThat(failCount.get()).isEqualTo(1)
         assertThat(result.deposit).isEqualTo(deposit - price * quantity) // 30만원
@@ -193,8 +194,10 @@ class TradeConcurrencyTest : IntegrationTestSupport() {
         executor.shutdown()
 
         // then
-        val userStock = userStockRepository.findByUsersIdAndStockId(user.id, stock.id).orElseThrow()
-        val result = userAccountRepository.findByUsersId(user.id).orElseThrow()
+        val userStock = userStockRepository.findByUsersIdAndStockId(user.id, stock.id)
+            ?: throw NoSuchElementException()
+        val result = userAccountRepository.findByUsersId(user.id)
+            ?: throw NoSuchElementException()
 
         assertThat(successCount.get()).isEqualTo(2)
         assertThat(failCount.get()).isEqualTo(0)

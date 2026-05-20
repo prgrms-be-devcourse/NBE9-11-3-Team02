@@ -76,7 +76,7 @@ class TradeSellProcessor(
             .orElseThrow { EntityNotFoundException("주식 정보가 없습니다.") }
 
         val userStock = userStockRepository.findByUsersIdAndStockId(userId, request.stockId)
-            .orElseThrow { EntityNotFoundException("보유하지 않은 주식입니다.") }
+            ?: throw EntityNotFoundException("보유하지 않은 주식입니다.")
 
         // 2. 현재가 조회 — KIS WebSocket 수신 후 RealTimeStockPriceStore에 저장된 실시간 가격
         val stockPrice = stockPriceStore.get(stock.stockCode)
@@ -123,7 +123,7 @@ class TradeSellProcessor(
 
         // 8. 거래 내역 저장 (account는 여기서 조회)
         val account = userAccountRepository.findByUsersId(userId)
-            .orElseThrow { EntityNotFoundException("존재하지 않는 계좌입니다.") }
+            ?: throw EntityNotFoundException("존재하지 않는 계좌입니다.")
 
         // 8. 거래 내역 저장
         val trade = Trade.sell(account.users, stock, request.quantity, price, profit)

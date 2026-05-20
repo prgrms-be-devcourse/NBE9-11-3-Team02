@@ -9,7 +9,7 @@ import java.util.*
 
 interface UserStockRepository : JpaRepository<UserStock, Long> {
 
-    fun findByUsersIdAndStockId(usersId: Long, stockId: Long): Optional<UserStock>
+    fun findByUsersIdAndStockId(usersId: Long, stockId: Long): UserStock?
 
     fun findAllByUsersId(users_id: Long): List<UserStock>
 

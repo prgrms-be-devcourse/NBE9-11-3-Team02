@@ -186,17 +186,14 @@ class BaseInitData(
             }
 
         val plus1Account = userAccountRepository.findByUsersId(plus1.id)
-            .orElse(null)
-            .getOrThrow { IllegalStateException("plus1 계좌 없음") }
+            ?: throw IllegalStateException("plus1 계좌 없음")
         val plus2Account = userAccountRepository.findByUsersId(plus2.id)
-            .orElse(null)
-            .getOrThrow { IllegalStateException("plus2 계좌 없음") }
+            ?: throw IllegalStateException("plus2 계좌 없음")
         val minus1Account = userAccountRepository.findByUsersId(minus1.id)
-            .orElse(null)
-            .getOrThrow { IllegalStateException("minus1 계좌 없음") }
+            ?: throw IllegalStateException("minus1 계좌 없음")
         val minus2Account = userAccountRepository.findByUsersId(minus2.id)
-            .orElse(null)
-            .getOrThrow { IllegalStateException("minus2 계좌 없음") }
+            ?: throw IllegalStateException("minus2 계좌 없음")
+
 
 
         val samsung = stockRepository.findByStockCode("005930")

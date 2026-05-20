@@ -72,12 +72,11 @@ class TradeControllerSellTest : ControllerTestSupport(){
             )
         )
 
-        val userStock = userStockRepository.findByUsersIdAndStockId(1L,1L)
-            .orElseThrow{ RuntimeException("테스트용 UserStock데이터가 없습니다.") }
+        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L)
+            ?: throw RuntimeException("테스트용 UserStock데이터가 없습니다.")
 
         val userAccount = userAccountRepository.findByUsersId(1L)
-            .orElseThrow { RuntimeException("테스트용 UserAccount 데이터가 없습니다.") }
-
+            ?: throw RuntimeException("테스트용 UserAccount 데이터가 없습니다.")
         userStock.updateQuantity(10L)
 
         // 잔액 맞추기
@@ -134,8 +133,10 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .andExpect(jsonPath("$.message").value("매도가 완료되었습니다."))
             .andExpect(jsonPath("$.data").exists())
 
-        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L).orElseThrow()
-        val userAccount = userAccountRepository.findByUsersId(1L).orElseThrow()
+        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L)
+            ?: throw NoSuchElementException()
+        val userAccount = userAccountRepository.findByUsersId(1L)
+            ?: throw NoSuchElementException()
 
         assertThat(userStock.quantity).isEqualTo(5L)
         assertThat(userAccount.deposit).isEqualTo(1375000L)
@@ -172,9 +173,10 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .andExpect(jsonPath("$.data").exists())
 
         val deleted = userStockRepository.findByUsersIdAndStockId(1L, 1L)
-        val userAccount = userAccountRepository.findByUsersId(1L).orElseThrow()
+        val userAccount = userAccountRepository.findByUsersId(1L)
+            ?: throw NoSuchElementException()
 
-        assertThat(deleted).isEmpty()
+        assertThat(deleted).isNull()
         assertThat(userAccount.deposit).isEqualTo(1750000L)
         assertThat(userAccount.totalPurchase).isEqualTo(0L)
     }
@@ -216,7 +218,8 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .andExpect(status().isOk)
             .andExpect(jsonPath("$.message").value("매도가 완료되었습니다."))
 
-        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L).orElseThrow()
+        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L)
+            ?: throw NoSuchElementException()
 
         assertThat(userStock.quantity).isEqualTo(9L)
         assertThat(userAccount().deposit).isEqualTo(1060000L)
@@ -279,7 +282,8 @@ class TradeControllerSellTest : ControllerTestSupport(){
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.message").value("보유 수량이 부족합니다."))
 
-        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L).orElseThrow()
+        val userStock = userStockRepository.findByUsersIdAndStockId(1L, 1L)
+            ?: throw NoSuchElementException()
         assertThat(userStock.quantity).isEqualTo(10L)
     }
 
@@ -312,6 +316,7 @@ class TradeControllerSellTest : ControllerTestSupport(){
     }
 
     private fun userAccount(): UserAccount {
-        return userAccountRepository.findByUsersId(1L).orElseThrow()
+        return userAccountRepository.findByUsersId(1L)
+            ?: throw NoSuchElementException()
     }
 }

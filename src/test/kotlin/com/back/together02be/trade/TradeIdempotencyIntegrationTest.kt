@@ -75,9 +75,9 @@ class TradeIdempotencyIntegrationTest : IntegrationTestSupport() {
             tradeRepository.findAll().filter { it.stock.id == stock.id }
         )
         userStockRepository.findByUsersIdAndStockId(user.id, stock.id)
-            .ifPresent { userStockRepository.delete(it) }
+            ?.let { userStockRepository.delete(it) }
         userAccountRepository.findByUsersId(user.id)
-            .ifPresent { userAccountRepository.delete(it) }
+            ?.let { userAccountRepository.delete(it) }
         idempotencyKeyRepository.deleteAll(
             idempotencyKeyRepository.findAll().filter { it.userId == user.id }
         )

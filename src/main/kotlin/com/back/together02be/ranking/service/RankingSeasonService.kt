@@ -62,7 +62,7 @@ class RankingSeasonService(
         }
 
         val account = userAccountRepository.findByUsersId(user.id)
-            .orElseThrow { IllegalStateException("계좌 정보가 없습니다. userId=${user.id}") }
+            ?: throw IllegalStateException("계좌 정보가 없습니다. userId=${user.id}")
 
         val totalAsset = rankingAssetCalculator.calculateTotalAsset(account)
         val season = RankingSeason(user, totalAsset, startDate)

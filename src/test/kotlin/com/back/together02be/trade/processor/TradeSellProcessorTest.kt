@@ -75,9 +75,13 @@ class TradeSellProcessorTest {
 
 
     // 공통 Mocking 설정을 위한 Helper 메서드
+//    private fun mockCommonDependencies(stock: Stock, userStock: UserStock, account: UserAccount) {
+//        given(stockRepository.findById(anyLong())).willReturn(Optional.of(stock))
+//        given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(Optional.of(userStock))
+//    }
     private fun mockCommonDependencies(stock: Stock, userStock: UserStock, account: UserAccount) {
         given(stockRepository.findById(anyLong())).willReturn(Optional.of(stock))
-        given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(Optional.of(userStock))
+        given(userStockRepository.findByUsersIdAndStockId(anyLong(), anyLong())).willReturn(userStock)
     }
 
     @Test
@@ -103,7 +107,7 @@ class TradeSellProcessorTest {
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
-        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(account)
 
         val mockTrade = Trade.sell(account.users, stock, 10L, 55000L, 450000L)
         ReflectionTestUtils.setField(mockTrade, "id", 1L)
@@ -140,7 +144,7 @@ class TradeSellProcessorTest {
         )
         given(userStockRepository.updateQuantity(anyLong(), anyLong(), anyLong())).willReturn(1)
         given(userAccountRepository.updateDepositAndPurchase(anyLong(), anyLong(), anyLong())).willReturn(1)
-        given(userAccountRepository.findByUsersId(anyLong())).willReturn(Optional.of(account))
+        given(userAccountRepository.findByUsersId(anyLong())).willReturn(account)
 
         val mockTrade = Trade.sell(account.users, stock, 20L, 55000L, 900000L)
         ReflectionTestUtils.setField(mockTrade, "id", 2L)
