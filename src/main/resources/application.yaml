@@ -49,3 +49,7 @@ logging:
     org.hibernate.orm.jdbc.bind: INFO
     org.hibernate.orm.jdbc.extract: INFO
     org.springframework.transaction.interceptor: INFO
+
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL:}

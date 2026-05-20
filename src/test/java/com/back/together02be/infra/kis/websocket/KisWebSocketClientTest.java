@@ -5,8 +5,11 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.java_websocket.WebSocket;
@@ -22,6 +25,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.back.together02be.infra.kis.config.KisProperties;
 import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
+import com.back.together02be.infra.notification.DiscordNotifier;
 
 /**
  * KisWebSocketClient 단위 테스트
@@ -47,6 +51,7 @@ class KisWebSocketClientTest {
 	private ApprovalKeyService approvalKeyService;
 	private KisWebSocketHandler handler;
 	private ApplicationEventPublisher eventPublisher;
+	private DiscordNotifier discordNotifier;
 
 	// Lifecycle
 	@BeforeEach
@@ -70,9 +75,13 @@ class KisWebSocketClientTest {
 		handler = mock(KisWebSocketHandler.class);
 		eventPublisher = mock(ApplicationEventPublisher.class);
 
+		discordNotifier = mock(DiscordNotifier.class);
+
 		// 5) SUT 수동 생성 (@PostConstruct인 connect()는 각 테스트에서 직접 호출)
 		// System Under Test — 지금 테스트하려는 대상 클래스
-		sut = new KisWebSocketClient(kisProperties, approvalKeyService, handler, eventPublisher);
+		sut = new KisWebSocketClient(
+			kisProperties, approvalKeyService, handler, eventPublisher, discordNotifier
+		);
 	}
 
 	@AfterEach
@@ -287,6 +296,85 @@ class KisWebSocketClientTest {
 		}
 	}
 
+	@Nested
+	@DisplayName("장기 다운타임 알림")
+	class AlertTest {
+
+		@Test
+		@DisplayName("5분 미만 끊김에서는 다운 알림이 발사되지 않는다")
+		void shortDowntime_doesNotSendAlert() throws Exception {
+			CountDownLatch onOpenLatch = new CountDownLatch(1);
+			doAnswer(inv -> { onOpenLatch.countDown(); return null; })
+				.when(handler).onOpen(any());
+
+			sut.start();
+			onOpenLatch.await(3, TimeUnit.SECONDS);
+
+			// lastConnectedAt이 방금이므로 다운타임 < 5분
+			fakeServer.stop(500);
+			Thread.sleep(2000);
+
+			verify(discordNotifier, never()).sendAlert(contains("장기 다운"), any());
+		}
+
+		@Test
+		@DisplayName("5분 이상 끊김 시 다운 알림이 1회 발사된다")
+		void longDowntime_sendsAlertOnce() throws Exception {
+			CountDownLatch onOpenLatch = new CountDownLatch(1);
+			doAnswer(inv -> { onOpenLatch.countDown(); return null; })
+				.when(handler).onOpen(any());
+
+			sut.start();
+			onOpenLatch.await(3, TimeUnit.SECONDS);
+
+			// 6분 전 연결된 것처럼 조작 → 임계값 즉시 초과
+			setLastConnectedAt(Instant.now().minus(Duration.ofMinutes(6)));
+
+			fakeServer.stop(500);
+			Thread.sleep(2000); // 재연결 시도 + 알림 발사 대기
+
+			verify(discordNotifier, times(1)).sendAlert(contains("장기 다운"), any());
+		}
+
+		@Test
+		@DisplayName("이미 알림이 발사된 상태에서는 중복 발사되지 않는다")
+		void afterAlertSent_doesNotSendAgain() throws Exception {
+			CountDownLatch onOpenLatch = new CountDownLatch(1);
+			doAnswer(inv -> { onOpenLatch.countDown(); return null; })
+				.when(handler).onOpen(any());
+
+			sut.start();
+			onOpenLatch.await(3, TimeUnit.SECONDS);
+
+			// 이미 알림 발사된 상태로 세팅
+			setAlertSent(true);
+			setLastConnectedAt(Instant.now().minus(Duration.ofMinutes(6)));
+
+			fakeServer.stop(500);
+			Thread.sleep(2000);
+
+			verify(discordNotifier, never()).sendAlert(contains("장기 다운"), any());
+		}
+
+		@Test
+		@DisplayName("알림 발사 후 복구되면 복구 알림이 발사되고 alertSent가 reset된다")
+		void recovery_sendsRecoveryAlertAndResetsFlag() throws Exception {
+			// 이전에 다운 알림이 발사된 상태 세팅
+			setAlertSent(true);
+
+			CountDownLatch onOpenLatch = new CountDownLatch(1);
+			doAnswer(inv -> { onOpenLatch.countDown(); return null; })
+				.when(handler).onOpen(any());
+
+			sut.start();
+			onOpenLatch.await(3, TimeUnit.SECONDS);
+			Thread.sleep(500); // onOpen 내 복구 알림 발사까지 여유
+
+			verify(discordNotifier).sendAlert(contains("복구"), any());
+			assertThat(extractAlertSent()).isFalse();
+		}
+	}
+
 	// 헬퍼
 
 	/**
@@ -297,6 +385,26 @@ class KisWebSocketClientTest {
 		field.setAccessible(true);
 		AtomicInteger counter = (AtomicInteger)field.get(sut);
 		return counter.get();
+	}
+
+	private void setLastConnectedAt(Instant instant) throws Exception {
+		var field = KisWebSocketClient.class.getDeclaredField("lastConnectedAt");
+		field.setAccessible(true);
+		field.set(sut, instant);
+	}
+
+	private void setAlertSent(boolean value) throws Exception {
+		var field = KisWebSocketClient.class.getDeclaredField("alertSent");
+		field.setAccessible(true);
+		AtomicBoolean flag = (AtomicBoolean)field.get(sut);
+		flag.set(value);
+	}
+
+	private boolean extractAlertSent() throws Exception {
+		var field = KisWebSocketClient.class.getDeclaredField("alertSent");
+		field.setAccessible(true);
+		AtomicBoolean flag = (AtomicBoolean)field.get(sut);
+		return flag.get();
 	}
 
 	// 테스트 전용 WebSocket 서버
