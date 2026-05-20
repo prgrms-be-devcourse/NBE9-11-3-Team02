@@ -5,6 +5,7 @@ services:
       - k6
     environment:
       - K6_OUT=influxdb=http://influxdb:8086/k6
+      - BASE_URL=http://host.docker.internal:8080
     volumes:
       - ./k6:/scripts
     command: run /scripts/test.js
