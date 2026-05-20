@@ -16,6 +16,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -53,9 +54,15 @@ public class RankingSnapshotService {
 
     // 전체 유저를 수익률 기준으로 정렬해 top5만 뽑는다.
     private List<RankingCandidate> getTop5Candidates() {
-        return userAccountRepository.findAll()
-                .stream()
-                .map(this::toCandidate)
+        // 1. 전체 유저 계좌 리스트를 한 번에 조회.
+        List<UserAccount> userAccounts = userAccountRepository.findAll();
+
+        // 2. 계산기에게 리스트를 통째로 넘겨 '유저ID별 총자산 Map'을 단 1번의 주식 쿼리로 얻어옴.
+        Map<Long, Long> totalAssetMap = rankingAssetCalculator.calculateAllUsersTotalAsset(userAccounts);
+
+        // 3. 루프 내부에서 더 이상 DB 조회를 하지 않고, 스트림 연산을 수행.
+        return userAccounts.stream()
+                .map(userAccount -> toCandidate(userAccount, totalAssetMap)) // 🔄 파라미터 추가 수정
                 .sorted(
                         Comparator.comparing(RankingCandidate::profitRate, Comparator.reverseOrder())
                                 .thenComparing(RankingCandidate::totalAsset, Comparator.reverseOrder())
@@ -65,12 +72,15 @@ public class RankingSnapshotService {
                 .toList();
     }
 
-    // 계좌 하나를 랭킹 후보 데이터로 변환한다.
-    private RankingCandidate toCandidate(UserAccount userAccount) {
+    // 미리 계산해 둔 totalAssetMap을 전달받아 메모리에서 값을 Mapping.
+    private RankingCandidate toCandidate(UserAccount userAccount, Map<Long, Long> totalAssetMap) {
         Users user = userAccount.getUsers();
+        Long userId = user.getId();
 
-        long totalAsset = rankingAssetCalculator.calculateTotalAsset(userAccount);
-        RankingSeason season = rankingSeasonService.getActiveSeason(user.getId());
+        // 기존의 코드를 지우고, 미리 메모리에 매핑된 Map에서 자산 정보를 즉시 꺼냄
+        long totalAsset = totalAssetMap.getOrDefault(userId, 0L);
+
+        RankingSeason season = rankingSeasonService.getActiveSeason(userId);
         BigDecimal profitRate = calculateProfitRate(totalAsset, season.getBaseAsset());
 
         return new RankingCandidate(user, totalAsset, profitRate);
