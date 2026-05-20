@@ -27,6 +27,9 @@ public class KisTokenService {
     // 지터 범위 ±10초
     private static final long JITTER_MILLIS = 10_000L;
 
+    //재시도 횟수 최대 3번으로 제한
+    private static final int MAX_RETRIES = 3;
+
     @Value("${kis.app-key}")
     private String appKey;
 
@@ -40,111 +43,78 @@ public class KisTokenService {
 
     private final RestClient restClient;
 
+    private final KisTokenWriter kisTokenWriter;
+
+    // 락을 위한 전용 객체 생성
+    private final Object tokenIssueLock = new Object();
+
     // 사용 가능한 토큰이 있으면 재사용, 없으면 새로 발급
-    @Transactional
-    public synchronized String getAccessToken() {
+    public String getAccessToken() {
         KisAccessToken savedToken = kisAccessTokenRepository.findTopByOrderByIdDesc()
                 .orElse(null);
 
-        //유효한 최근 토큰이 있으면 그대로 반환
+        // 1. 락 없이 1차 확인 (평소 조회 시에는 여기서 바로 리턴되어 병목 없음)
         if (savedToken != null && savedToken.isUsable()) {
-            log.info("KIS 접근 토큰 재사용. expiresAt={}", savedToken.getExpiresAt());
             return savedToken.getAccessToken();
         }
 
-        //유효한 토큰이 없으면 재시도 포함 신규 발급
-        return issueAndSaveNewTokenWithRetry();
-    }
-
-    // 토큰 발급 실패 시 지터 방식으로 무한 재시도
-    private String issueAndSaveNewTokenWithRetry() {
-        int attempt = 1;
-
-        while (true) {
-            try {
-                // 토큰 발급 성공 시 즉시 반환
-                return issueAndSaveNewToken();
-
-            } catch (HttpClientErrorException.Forbidden e) {
-                String responseBody = e.getResponseBodyAsString();
-
-                // 발급 제한 오류면 지터 대기 후 재시도
-                if (responseBody != null && responseBody.contains("EGW00133")) {
-                    log.warn("KIS 접근 토큰 발급 제한 응답 발생 (attempt={}). 지터 대기 후 재시도합니다. body={}",
-                            attempt, responseBody);
-
-                    sleepRetryInterval(attempt);
-                    attempt++;
-                    continue;
-                }
-
-                // 발급 제한이 아닌 403은 그대로 예외 처리
-                throw e;
-
-            } catch (Exception e) {
-                log.warn("KIS 접근 토큰 발급 실패 (attempt={}). 지터 대기 후 재시도합니다. 원인={}",
-                        attempt, e.getMessage());
-
-                sleepRetryInterval(attempt);
-                attempt++;
+        // 2. 토큰이 없을 때만 최소 범위로 락을 잡음
+        synchronized (tokenIssueLock) {
+            // 3. 락 안에서 2차 확인 (내가 락을 기다리는 동안 앞선 요청이 이미 토큰을 발급했을 수 있음)
+            KisAccessToken latestToken = kisAccessTokenRepository.findTopByOrderByIdDesc().orElse(null);
+            if (latestToken != null && latestToken.isUsable()) {
+                log.info("KIS 접근 토큰 대기 후 재사용. expiresAt={}", latestToken.getExpiresAt());
+                return latestToken.getAccessToken();
             }
+
+            // 진짜 아무도 발급을 안 했을 때만 외부 통신 시작
+            return issueAndSaveNewTokenWithRetry();
         }
     }
 
-    // KIS 토큰 발급 API를 호출하고 DB에 저장한다.
-    @Transactional
-    protected String issueAndSaveNewToken() {
-        String url = restBaseUrl + "/oauth2/tokenP";
+    private String issueAndSaveNewTokenWithRetry() {
+        // while(true) 대신 최대 3번까지만 도는 for문으로 변경
+        for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+            try {
+                KisTokenRes tokenResponse = fetchTokenFromApi(); // 외부 API 호출 (트랜잭션 X)
+                return kisTokenWriter.saveTokenToDb(tokenResponse);             // DB 저장 (트랜잭션 O)
 
-        //토근 발급 요청 바디
+            } catch (HttpClientErrorException.Forbidden e) {
+                String responseBody = e.getResponseBodyAsString();
+                if (responseBody != null && responseBody.contains("EGW00133")) {
+                    log.warn("KIS 접근 토큰 발급 제한 응답 발생 (attempt={}/{}).", attempt, MAX_RETRIES);
+                    if (attempt == MAX_RETRIES) throw e; // 재시도 횟수 3번 넘어가면 예외처리
+                    sleepRetryInterval(attempt);
+                    continue;
+                }
+                throw e;
+            } catch (Exception e) {
+                log.warn("KIS 접근 토큰 발급 실패 (attempt={}/{}).", attempt, MAX_RETRIES);
+                if (attempt == MAX_RETRIES) {
+                    throw new IllegalStateException("토큰 발급 최대 재시도 횟수 초과", e); // 실패 처리
+                }
+                sleepRetryInterval(attempt);
+            }
+        }
+        throw new IllegalStateException("토큰 발급 실패");
+    }
+
+    // 외부 API 통신 전용 (트랜잭션 없음)
+    private KisTokenRes fetchTokenFromApi() {
+        String url = restBaseUrl + "/oauth2/tokenP";
         Map<String, String> requestBody = Map.of(
                 "grant_type", "client_credentials",
                 "appkey", appKey,
                 "appsecret", appSecret
         );
 
-        //KIS 토큰 발급 API 호출
-        KisTokenRes tokenResponse = restClient.post()
+        // KIS API 호출 후 데이터만 받아옴 (DB 커넥션 사용 안 함)
+        return restClient.post()
                 .uri(url)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(requestBody)
                 .retrieve()
                 .body(KisTokenRes.class);
-
-        //응답이 비정상이면 예외 처리
-        if (tokenResponse == null || tokenResponse.accessToken() == null) {
-            throw new IllegalStateException("토큰 발급 실패");
-        }
-
-        //만료 시각 계산
-        LocalDateTime expiresAt = LocalDateTime.now()
-                .plusSeconds(tokenResponse.expiresIn() == null ? 0 : tokenResponse.expiresIn());
-
-        //최근 토큰 레코드 조회
-        KisAccessToken tokenEntity = kisAccessTokenRepository.findTopByOrderByIdDesc()
-                .orElse(null);
-
-        //최근 토큰이 없으면 insert
-        if (tokenEntity == null) {
-            tokenEntity = new KisAccessToken(
-                    tokenResponse.accessToken(),
-                    tokenResponse.tokenType(),
-                    expiresAt
-            );
-        } else {
-            //최근 토큰이 있으면 update
-            tokenEntity.update(
-                    tokenResponse.accessToken(),
-                    tokenResponse.tokenType(),
-                    expiresAt
-            );
-        }
-
-        //DB 저장
-        kisAccessTokenRepository.save(tokenEntity);
-        log.info("KIS 접근 토큰 신규 발급 및 저장 완료. expiresAt={}", expiresAt);
-
-        return tokenEntity.getAccessToken();
     }
 
     private void sleepRetryInterval(int attempt) {
