@@ -22,6 +22,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import com.back.together02be.infra.kis.config.KisProperties;
 import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent;
+import com.back.together02be.infra.notification.DiscordNotifier;
 
 /**
  * KisWebSocketClient 단위 테스트
@@ -47,6 +48,7 @@ class KisWebSocketClientTest {
 	private ApprovalKeyService approvalKeyService;
 	private KisWebSocketHandler handler;
 	private ApplicationEventPublisher eventPublisher;
+	private DiscordNotifier discordNotifier;
 
 	// Lifecycle
 	@BeforeEach
@@ -70,9 +72,13 @@ class KisWebSocketClientTest {
 		handler = mock(KisWebSocketHandler.class);
 		eventPublisher = mock(ApplicationEventPublisher.class);
 
+		discordNotifier = mock(DiscordNotifier.class);
+
 		// 5) SUT 수동 생성 (@PostConstruct인 connect()는 각 테스트에서 직접 호출)
 		// System Under Test — 지금 테스트하려는 대상 클래스
-		sut = new KisWebSocketClient(kisProperties, approvalKeyService, handler, eventPublisher);
+		sut = new KisWebSocketClient(
+			kisProperties, approvalKeyService, handler, eventPublisher, discordNotifier
+		);
 	}
 
 	@AfterEach
