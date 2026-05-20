@@ -2,6 +2,7 @@ package com.back.together02be.infra.kis.websocket
 
 import com.back.together02be.infra.kis.config.KisProperties
 import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent
+import com.back.together02be.infra.kis.notification.DiscordNotifier
 import jakarta.annotation.PostConstruct
 import jakarta.annotation.PreDestroy
 import org.java_websocket.client.WebSocketClient
@@ -10,9 +11,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 import java.net.URI
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.pow
@@ -24,24 +29,29 @@ class KisWebSocketClient(
     private val kisProperties: KisProperties,
     private val approvalKeyService: ApprovalKeyService,
     private val handler: KisWebSocketHandler,
-    private val eventPublisher: ApplicationEventPublisher
+    private val eventPublisher: ApplicationEventPublisher,
+    private val discordNotifier: DiscordNotifier
 ) {
     private enum class State { CONNECTING, CONNECTED, SHUTTING_DOWN }
 
     companion object {
-        private const val INITIAL_DELAY_MS = 1_000L
-        private const val MAX_DELAY_MS = 30_000L
-        private const val BACKOFF_MULTIPLIER = 2.0
-        private const val JITTER_FACTOR = 0.2
+        private const val INITIAL_DELAY_MS = 1_000L // 첫 재연결 대기 시간 (1초)
+        private const val MAX_DELAY_MS = 30_000L // 알림 발사 전 재연결 최대 대기 시간 (30초)
+        private const val BACKOFF_MULTIPLIER = 2.0 // 재시도마다 대기 시간 증가 배수
+        private const val JITTER_FACTOR = 0.2 // 동시 재연결 분산을 위한 랜덤 오차 범위
+        private val ALERT_THRESHOLD: Duration = Duration.ofMinutes(5) // 연결 끊긴 후 알림 전송까지 시간
+        private const val ALERT_BACKOFF_MS = 2 * 60_000L // 알림 발사 후 재연결 시도 간격 상한 (2분마다 재시도)
     }
 
     private lateinit var client: WebSocketClient
     private val state = AtomicReference(State.CONNECTING)
     private val reconnectAttempt = AtomicInteger(0)
     private lateinit var reconnectScheduler: ScheduledExecutorService
+    @Volatile private var lastConnectedAt: Instant = Instant.now()
+    private val alertSent = AtomicBoolean(false)
 
     @PostConstruct
-    fun start() {  // connect() → start()로 분리
+    fun start() {
         reconnectScheduler = Executors.newSingleThreadScheduledExecutor { r ->
             Thread(r, "kis-reconnect").also { it.isDaemon = true }
         }
@@ -59,13 +69,26 @@ class KisWebSocketClient(
                 override fun onOpen(handshake: ServerHandshake) {
                     log.info("한국투자 증권 WebSocket 연결 성공")
                     val wasReconnect = reconnectAttempt.get() > 0
+                    val now = Instant.now()
+                    val downtime = Duration.between(lastConnectedAt, now)
+
                     state.set(State.CONNECTED)
                     reconnectAttempt.set(0)
+                    lastConnectedAt = now
+
                     handler.onOpen(this)
                     handler.resubscribeAll() // 첫 연결 시 no-op, 재연결 시 복원
 
                     if (wasReconnect) {
                         eventPublisher.publishEvent(WebSocketReconnectedEvent())
+                    }
+
+                    // 알림 발송 후 복구된 경우 → 복구 알림
+                    if (alertSent.compareAndSet(true, false)) {
+                        discordNotifier.sendAlert(
+                            "KIS WebSocket 복구",
+                            "다운타임: ${formatDuration(downtime)}"
+                        )
                     }
                 }
 
@@ -124,12 +147,28 @@ class KisWebSocketClient(
         val delay = calculateBackoff(attempt)
         log.info("재연결 예약 - 시도 #{}, {}ms 후", attempt, delay)
         reconnectScheduler.schedule(::connect, delay, TimeUnit.MILLISECONDS)
+
+        // 5분 이상 다운 → 장기 다운 알림 (최초 1회)
+        val downtime = Duration.between(lastConnectedAt, Instant.now())
+        if (downtime >= ALERT_THRESHOLD && alertSent.compareAndSet(false, true)) {
+            discordNotifier.sendAlert(
+                "KIS WebSocket 장기 다운",
+                "다운타임: ${formatDuration(downtime)}\n재시도 횟수: $attempt\n자동 재시도는 계속됩니다."
+            )
+        }
+    }
+
+    private fun formatDuration(d: Duration): String {
+        val minutes = d.toMinutes()
+        val seconds = d.minusMinutes(minutes).seconds
+        return "${minutes}분 ${seconds}초"
     }
 
     private fun calculateBackoff(attempt: Int): Long {
-        val base = minOf(MAX_DELAY_MS.toDouble(),
+        val maxDelay = if (alertSent.get()) ALERT_BACKOFF_MS else MAX_DELAY_MS
+        val base = minOf(maxDelay.toDouble(),
             INITIAL_DELAY_MS.toDouble() * BACKOFF_MULTIPLIER.pow(attempt - 1))
-        val jitter = 1 + (Math.random() * 2 - 1) * JITTER_FACTOR
+        val jitter = 1 + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * JITTER_FACTOR
         return (base * jitter).toLong()
     }
 

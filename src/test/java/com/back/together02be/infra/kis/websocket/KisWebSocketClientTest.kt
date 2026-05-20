@@ -2,17 +2,22 @@ package com.back.together02be.infra.kis.websocket
 
 import com.back.together02be.infra.kis.config.KisProperties
 import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent
+import com.back.together02be.infra.kis.notification.DiscordNotifier
 import org.assertj.core.api.Assertions.assertThat
 import org.java_websocket.WebSocket
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ClientHandshake
 import org.java_websocket.server.WebSocketServer
 import org.junit.jupiter.api.*
+import org.mockito.ArgumentMatchers.contains
 import org.mockito.kotlin.*
 import org.springframework.context.ApplicationEventPublisher
 import java.net.InetSocketAddress
+import java.time.Duration
+import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -23,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger
  *   - 재연결: 끊김 감지 후 백오프, 재구독, 이벤트 발행
  *   - 종료: graceful shutdown 시 재연결 시도 중단
  *   - 위임: subscribe/unsubscribe의 handler로의 위임
+ *   - 장기 다운타임 알림: Discord 알림 발사/복구 검증
  *
  * 전략: @SpringBootTest 없이 객체 수동 생성.
  *       실제 WebSocket 연결은 로컬 TestWebSocketServer로 대체.
@@ -38,6 +44,7 @@ internal class KisWebSocketClientTest {
     private lateinit var approvalKeyService: ApprovalKeyService
     private lateinit var handler: KisWebSocketHandler
     private lateinit var eventPublisher: ApplicationEventPublisher
+    private lateinit var discordNotifier: DiscordNotifier
 
     // Lifecycle
     @BeforeEach
@@ -60,9 +67,10 @@ internal class KisWebSocketClientTest {
         // 4) KisWebSocketHandler — 호출 여부 검증용 mock
         handler = mock()
         eventPublisher = mock()
+        discordNotifier = mock()
 
         // 5) SUT 수동 생성 (@PostConstruct인 connect()는 각 테스트에서 직접 호출)
-        sut = KisWebSocketClient(kisProperties, approvalKeyService, handler, eventPublisher)
+        sut = KisWebSocketClient(kisProperties, approvalKeyService, handler, eventPublisher, discordNotifier)
     }
 
     @AfterEach
@@ -243,6 +251,80 @@ internal class KisWebSocketClientTest {
 
     }
 
+    @Nested
+    @DisplayName("장기 다운타임 알림")
+    inner class AlertTest {
+
+        @Test
+        @DisplayName("5분 미만 끊김에서는 다운 알림이 발사되지 않는다")
+        fun shortDowntime_doesNotSendAlert() {
+            val onOpenLatch = CountDownLatch(1)
+            doAnswer { onOpenLatch.countDown(); null }.whenever(handler).onOpen(any())
+
+            sut.start()
+            onOpenLatch.await(3, TimeUnit.SECONDS)
+
+            // lastConnectedAt이 방금이므로 다운타임 < 5분
+            fakeServer.stop(500)
+            Thread.sleep(2000)
+
+            verify(discordNotifier, never()).sendAlert(contains("장기 다운"), any())
+        }
+
+        @Test
+        @DisplayName("5분 이상 끊김 시 다운 알림이 1회 발사된다")
+        fun longDowntime_sendsAlertOnce() {
+            val onOpenLatch = CountDownLatch(1)
+            doAnswer { onOpenLatch.countDown(); null }.whenever(handler).onOpen(any())
+
+            sut.start()
+            onOpenLatch.await(3, TimeUnit.SECONDS)
+
+            // 6분 전 연결된 것처럼 조작 → 임계값 즉시 초과
+            setLastConnectedAt(Instant.now().minus(Duration.ofMinutes(6)))
+
+            fakeServer.stop(500)
+            Thread.sleep(2000)
+
+            verify(discordNotifier, times(1)).sendAlert(contains("장기 다운"), any())
+        }
+
+        @Test
+        @DisplayName("이미 알림이 발사된 상태에서는 중복 발사되지 않는다")
+        fun afterAlertSent_doesNotSendAgain() {
+            val onOpenLatch = CountDownLatch(1)
+            doAnswer { onOpenLatch.countDown(); null }.whenever(handler).onOpen(any())
+
+            sut.start()
+            onOpenLatch.await(3, TimeUnit.SECONDS)
+
+            setAlertSent(true)
+            setLastConnectedAt(Instant.now().minus(Duration.ofMinutes(6)))
+
+            fakeServer.stop(500)
+            Thread.sleep(2000)
+
+            verify(discordNotifier, never()).sendAlert(contains("장기 다운"), any())
+        }
+
+        @Test
+        @DisplayName("알림 발사 후 복구되면 복구 알림이 발사되고 alertSent가 reset된다")
+        fun recovery_sendsRecoveryAlertAndResetsFlag() {
+            // 이전에 다운 알림이 발사된 상태 세팅
+            setAlertSent(true)
+
+            val onOpenLatch = CountDownLatch(1)
+            doAnswer { onOpenLatch.countDown(); null }.whenever(handler).onOpen(any())
+
+            sut.start()
+            onOpenLatch.await(3, TimeUnit.SECONDS)
+            Thread.sleep(500) // onOpen 내 복구 알림 발사까지 여유
+
+            verify(discordNotifier).sendAlert(contains("복구"), any())
+            assertThat(extractAlertSent()).isFalse()
+        }
+    }
+
     // 헬퍼
 
     /**
@@ -252,6 +334,24 @@ internal class KisWebSocketClientTest {
         val field = KisWebSocketClient::class.java.getDeclaredField("reconnectAttempt")
         field.isAccessible = true
         return (field.get(sut) as AtomicInteger).get()
+    }
+
+    private fun setLastConnectedAt(instant: Instant) {
+        val field = KisWebSocketClient::class.java.getDeclaredField("lastConnectedAt")
+        field.isAccessible = true
+        field.set(sut, instant)
+    }
+
+    private fun setAlertSent(value: Boolean) {
+        val field = KisWebSocketClient::class.java.getDeclaredField("alertSent")
+        field.isAccessible = true
+        (field.get(sut) as AtomicBoolean).set(value)
+    }
+
+    private fun extractAlertSent(): Boolean {
+        val field = KisWebSocketClient::class.java.getDeclaredField("alertSent")
+        field.isAccessible = true
+        return (field.get(sut) as AtomicBoolean).get()
     }
 
     // 테스트 전용 WebSocket 서버
