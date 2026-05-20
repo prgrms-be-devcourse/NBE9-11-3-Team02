@@ -1,0 +1,6 @@
+spring:
+  cache:
+    type: caffeine
+    cache-names: chart
+    caffeine:
+      spec: maximumSize=60,expireAfterWrite=24h,recordStats

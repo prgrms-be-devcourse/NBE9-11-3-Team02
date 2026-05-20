@@ -66,7 +66,7 @@ class TradeBuyProcessorTest {
         freshKey = IdempotencyKey("test-key", 1L)
         ReflectionTestUtils.setField(freshKey, "createdAt", LocalDateTime.now())
 
-        Mockito.lenient().`when`(idempotencyKeyRepository.findByIdempotencyKey(anyString())).thenReturn(Optional.of(freshKey))
+        Mockito.lenient().`when`(idempotencyKeyRepository.findByIdempotencyKey(anyString())).thenReturn(freshKey)
         Mockito.lenient().`when`(stockRepository.findById(1L)).thenReturn(Optional.of(stock))
         Mockito.lenient().`when`(userAccountRepository.decreaseDepositIfSufficient(anyLong(), anyLong())).thenReturn(1)
         Mockito.lenient().`when`(userAccountRepository.findByUsersIdWithLock(1L)).thenReturn(Optional.of(account))

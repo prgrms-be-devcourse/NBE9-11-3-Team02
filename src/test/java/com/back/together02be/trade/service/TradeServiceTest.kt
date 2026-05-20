@@ -19,7 +19,6 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.jupiter.MockitoExtension
-import java.util.Optional
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
@@ -94,7 +93,7 @@ class TradeServiceTest {
             .thenReturn(true)
             .thenReturn(false)
         Mockito.`when`(tradeBuyProcessor.processBuy(anyLong(), anyString(), anyArg())).thenReturn(mockResponse)
-        Mockito.`when`(idempotencyService.getStoredResponse(idempotencyKey)).thenReturn(Optional.empty())
+        Mockito.`when`(idempotencyService.getStoredResponse(idempotencyKey)).thenReturn(null)
 
         assertThatNoException().isThrownBy { tradeService.buy(1L, idempotencyKey, request) }
 
@@ -112,7 +111,7 @@ class TradeServiceTest {
         val cachedJson = "{\"tradeId\":1}"
 
         Mockito.`when`(idempotencyService.registerIfAbsent(idempotencyKey, 1L)).thenReturn(false)
-        Mockito.`when`(idempotencyService.getStoredResponse(idempotencyKey)).thenReturn(Optional.of(cachedJson))
+        Mockito.`when`(idempotencyService.getStoredResponse(idempotencyKey)).thenReturn(cachedJson)
         Mockito.`when`(objectMapper.readValue(cachedJson, BuyRes::class.java)).thenReturn(mockResponse)
 
         val result = tradeService.buy(1L, idempotencyKey, request)

@@ -6,7 +6,6 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.time.LocalDateTime
-import java.util.*
 
 @Service
 class IdempotencyService(
@@ -32,14 +31,10 @@ class IdempotencyService(
         }
     }
 
-    /**
-     * 완료된 요청의 캐시된 응답 JSON 조회.
-     * responseJson이 null이면 아직 처리 중인 요청.
-     */
+    // 완료된 요청의 캐시된 응답 JSON 조회. null이면 아직 처리 중인 요청.
     @Transactional(readOnly = true)
-    fun getStoredResponse(key: String): Optional<String> {
-        return idempotencyKeyRepository.findByIdempotencyKey(key)
-            .flatMap { Optional.ofNullable(it.responseJson) }
+    fun getStoredResponse(key: String): String? {
+        return idempotencyKeyRepository.findByIdempotencyKey(key)?.responseJson
     }
 
     // 처리 실패 시 키 반납 — 클라이언트 재시도 허용.

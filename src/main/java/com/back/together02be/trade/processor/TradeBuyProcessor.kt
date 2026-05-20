@@ -97,7 +97,7 @@ class TradeBuyProcessor(
         )
 
         idempotencyKeyRepository.findByIdempotencyKey(idempotencyKey)
-            .ifPresent { it.storeResponse(objectMapper.writeValueAsString(result)) }
+            ?.storeResponse(objectMapper.writeValueAsString(result))
 
         return result
     }

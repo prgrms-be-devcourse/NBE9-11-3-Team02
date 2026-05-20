@@ -11,13 +11,13 @@ import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter
-import org.springframework.web.cors.CorsConfiguration
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource
+import org.springframework.web.cors.CorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
 class SecurityConfig(
-    private val jwtAuthFilter: CustomAuthenticationFilter
+    private val jwtAuthFilter: CustomAuthenticationFilter,
+    private val corsConfigurationSource: CorsConfigurationSource
 ) {
 
     @Bean
@@ -27,7 +27,7 @@ class SecurityConfig(
     @Throws(Exception::class)
     fun filterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .cors { cors -> cors.configurationSource(corsConfigurationSource()) }
+            .cors { cors -> cors.configurationSource(corsConfigurationSource) }
             .csrf { csrf -> csrf.disable() }
             .sessionManagement { session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -78,18 +78,5 @@ class SecurityConfig(
             }
 
         return http.build()
-    }
-
-    @Bean
-    fun corsConfigurationSource(): UrlBasedCorsConfigurationSource {
-        val configuration = CorsConfiguration()
-        configuration.allowedOriginPatterns = listOf("*")
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-        configuration.allowedHeaders = listOf("*")
-        configuration.allowCredentials = true
-
-        val source = UrlBasedCorsConfigurationSource()
-        source.registerCorsConfiguration("/**", configuration)
-        return source
     }
 }

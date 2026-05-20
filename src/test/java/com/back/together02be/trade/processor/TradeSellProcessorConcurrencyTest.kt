@@ -4,6 +4,7 @@ import com.back.together02be.asset.entity.UserAccount
 import com.back.together02be.asset.entity.UserStock
 import com.back.together02be.asset.repository.UserAccountRepository
 import com.back.together02be.asset.repository.UserStockRepository
+import com.back.together02be.global.extend.getOrThrow
 import com.back.together02be.ranking.repository.RankingSeasonRepository
 import com.back.together02be.stock.dto.RealtimeStockPrice
 import com.back.together02be.stock.repository.StockRepository
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.given
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.transaction.annotation.Propagation
@@ -85,7 +87,7 @@ class TradeSellProcessorConcurrencyTest : IntegrationTestSupport() {
         given(clock.zone).willReturn(fixedClock.zone)
 
         val stock = stockRepository.findByStockCode("005930")
-            .orElseThrow { IllegalStateException("삼성전자 종목이 초기 데이터에 없습니다.") }
+            .getOrThrow { IllegalStateException("삼성전자 종목이 초기 데이터에 없습니다.") }
         stockId = stock.id
 
         val user = Users("testUser_${System.nanoTime()}", "test@test.com", "password")

@@ -17,7 +17,6 @@ import org.mockito.stubbing.Answer
 import org.springframework.test.util.ReflectionTestUtils
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter
 import java.io.IOException
-import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -38,7 +37,7 @@ internal class StockServiceTest {
     // 헬퍼
     private fun givenStockExists(stockCode: String) {
         BDDMockito.given(stockRepository.findByStockCode(stockCode))
-            .willReturn(Optional.of(Mockito.mock(Stock::class.java)))
+            .willReturn(Mockito.mock(Stock::class.java))
     }
 
     @Test
@@ -50,7 +49,7 @@ internal class StockServiceTest {
         ReflectionTestUtils.setField(stock, "id", 1L) // BaseEntity의 id 주입
 
         Mockito.`when`(stockRepository.findByStockCode(stockCode))
-            .thenReturn(Optional.of<Stock>(stock))
+            .thenReturn(stock)
 
         // when
         val result = stockService.getStockPrice(stockCode)
@@ -67,7 +66,7 @@ internal class StockServiceTest {
         // given
         val stockCode = "INVALID"
         Mockito.`when`(stockRepository.findByStockCode(stockCode))
-            .thenReturn(Optional.empty())
+            .thenReturn(null)
 
         // when & then
         Assertions.assertThatThrownBy({ stockService.getStockPrice(stockCode) })
@@ -78,8 +77,8 @@ internal class StockServiceTest {
     @Test
     @DisplayName("존재하지 않는 종목코드면 EntityNotFoundException 이 발생하고 SseEmitter 는 생성되지 않는다")
     fun 없는_종목코드_예외() {
-        BDDMockito.given(stockRepository.findByStockCode(INVALID_CODE))
-            .willReturn(Optional.empty())
+        given(stockRepository.findByStockCode(INVALID_CODE))
+            .willReturn(null)
 
         Mockito.mockConstruction(SseEmitter::class.java).use { mocked ->
             Assertions.assertThatThrownBy({
