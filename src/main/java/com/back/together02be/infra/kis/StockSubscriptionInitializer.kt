@@ -1,5 +1,6 @@
 package com.back.together02be.infra.kis
 
+import com.back.together02be.infra.kis.event.WebSocketReconnectedEvent
 import com.back.together02be.infra.kis.rest.KisPriceClient
 import com.back.together02be.infra.kis.websocket.KisWebSocketClient
 import com.back.together02be.stock.dto.RealtimeStockPrice
@@ -11,6 +12,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Component
+import java.util.concurrent.atomic.AtomicBoolean
 
 private val log = LoggerFactory.getLogger(StockSubscriptionInitializer::class.java)
 
@@ -21,6 +23,8 @@ class StockSubscriptionInitializer(
     private val kisWebSocketClient: KisWebSocketClient,
     private val rtStockPriceStore: RealTimeStockPriceStore
 ) {
+    private val reseedInProgress = AtomicBoolean(false)
+
     @EventListener(ApplicationReadyEvent::class)
     @Async
     fun initialize() {
@@ -99,5 +103,51 @@ class StockSubscriptionInitializer(
                 )
             }
         }
+    }
+
+    @EventListener
+    @Async
+    fun onWebSocketReconnected(event: WebSocketReconnectedEvent) {
+        if (!reseedInProgress.compareAndSet(false, true)) {
+            log.info("재시딩 이미 진행 중, skip")
+            return
+        }
+        try {
+            log.info("WebSocket 재연결 감지 → REST 재시딩 시작")
+            val stocks = stockRepository.findAll()
+            reseedPricesByRest(stocks)
+        } finally {
+            reseedInProgress.set(false)
+        }
+    }
+
+    private fun reseedPricesByRest(stocks: List<Stock>) {
+        val token = kisPriceClient.accessToken
+        var success = 0
+        var fail = 0
+
+        for (stock in stocks) {
+            try {
+                val restStock = kisPriceClient.getCurrentPrice(token, stock.stockCode)
+
+                rtStockPriceStore.put(  // putIfAbsent 대신 put (stale 덮어쓰기)
+                    stock.stockCode,
+                    RealtimeStockPrice.fromRest(stock.stockCode, restStock.output)
+                )
+                success++
+            } catch (e: Exception) {
+                fail++
+                log.warn("REST 재시딩 실패: {} - {}", stock.stockCode, e.message)
+            }
+
+            try {
+                Thread.sleep(1000)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                log.warn("REST 재시딩 중단됨")
+                return
+            }
+        }
+        log.info("REST 재시딩 결과: 성공 {}, 실패 {}", success, fail)
     }
 }

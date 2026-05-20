@@ -78,6 +78,31 @@ class KisWebSocketHandler(
         log.info("구독 취소: {}", stockCode)
     }
 
+    fun resubscribeAll() {
+        if (subscribedStocks.isEmpty()) return  // 첫 연결 시 no-op
+        log.info("재구독 시작 - {}개 종목", subscribedStocks.size)
+        for (stockCode in subscribedStocks) {
+            val message = """
+            {
+              "header": {
+                "approval_key": "$approvalKey",
+                "custtype": "P",
+                "tr_type": "1",
+                "content-type": "utf-8"
+              },
+              "body": {
+                "input": {
+                  "tr_id": "${KisConstants.TR_REALTIME_PRICE}",
+                  "tr_key": "$stockCode"
+                }
+              }
+            }
+        """.trimIndent()
+            conn?.send(message)
+            log.info("재구독: {}", stockCode)
+        }
+    }
+
     fun onMessage(message: String) {
         if (message.startsWith("{")) {
             try {
