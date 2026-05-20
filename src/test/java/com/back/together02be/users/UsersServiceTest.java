@@ -3,6 +3,7 @@ package com.back.together02be.users;
 import com.back.together02be.asset.entity.UserAccount;
 import com.back.together02be.asset.repository.UserAccountRepository;
 import com.back.together02be.global.util.JwtUtil;
+import com.back.together02be.global.util.TokenHashUtil;
 import com.back.together02be.ranking.service.RankingSeasonService;
 import com.back.together02be.users.dto.request.LoginReq;
 import com.back.together02be.users.dto.request.SignupReq;
@@ -112,7 +113,8 @@ class UsersServiceTest {
         assertThat(((Number) payload.get("id")).longValue()).isEqualTo(1L);
         assertThat(payload.get("username")).isEqualTo("testuser");
         assertThat(payload.get("nickname")).isEqualTo("닉네임");
-        assertThat(user.getRefreshToken()).isEqualTo(tokens[1]);
+        assertThat(user.getRefreshToken()).isNotEqualTo(tokens[1]);
+        assertThat(user.getRefreshToken()).isEqualTo(TokenHashUtil.sha256(tokens[1]));
         assertThat(user.getRefreshTokenExpiration()).isAfter(LocalDateTime.now());
     }
 
@@ -146,9 +148,9 @@ class UsersServiceTest {
     @DisplayName("정상 로그아웃 — RefreshToken 초기화")
     void t7() {
         Users user = new Users("testuser", "encoded", "닉네임");
-        user.updateRefreshToken("valid-token", LocalDateTime.now().plusDays(7));
+        user.updateRefreshToken(TokenHashUtil.sha256("valid-token"), LocalDateTime.now().plusDays(7));
 
-        when(usersRepository.findByRefreshToken("valid-token")).thenReturn(Optional.of(user));
+        when(usersRepository.findByRefreshToken(TokenHashUtil.sha256("valid-token"))).thenReturn(Optional.of(user));
 
         usersService.logout("valid-token");
 
@@ -159,7 +161,7 @@ class UsersServiceTest {
     @Test
     @DisplayName("존재하지 않는 RefreshToken으로 로그아웃 — IllegalArgumentException 발생")
     void t8() {
-        when(usersRepository.findByRefreshToken("invalid-token")).thenReturn(Optional.empty());
+        when(usersRepository.findByRefreshToken(TokenHashUtil.sha256("invalid-token"))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usersService.logout("invalid-token"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -171,9 +173,9 @@ class UsersServiceTest {
     void t9() {
         Users user = new Users("testuser", "encoded", "닉네임");
         ReflectionTestUtils.setField(user, "id", 1L);
-        user.updateRefreshToken("old-token", LocalDateTime.now().plusDays(7));
+        user.updateRefreshToken(TokenHashUtil.sha256("old-token"), LocalDateTime.now().plusDays(7));
 
-        when(usersRepository.findByRefreshToken("old-token")).thenReturn(Optional.of(user));
+        when(usersRepository.findByRefreshToken(TokenHashUtil.sha256("old-token"))).thenReturn(Optional.of(user));
 
         String[] tokens = usersService.reissueToken("old-token");
         Map<String, Object> payload = JwtUtil.payloadOrNull(tokens[0], "test-secret-key-must-be-32-bytes!!");
@@ -184,13 +186,14 @@ class UsersServiceTest {
         assertThat(((Number) payload.get("id")).longValue()).isEqualTo(1L);
         assertThat(payload.get("username")).isEqualTo("testuser");
         assertThat(payload.get("nickname")).isEqualTo("닉네임");
-        assertThat(user.getRefreshToken()).isEqualTo(tokens[1]);
+        assertThat(user.getRefreshToken()).isNotEqualTo(tokens[1]);
+        assertThat(user.getRefreshToken()).isEqualTo(TokenHashUtil.sha256(tokens[1]));
     }
 
     @Test
     @DisplayName("존재하지 않는 RefreshToken으로 재발급 — IllegalArgumentException 발생")
     void t10() {
-        when(usersRepository.findByRefreshToken("ghost-token")).thenReturn(Optional.empty());
+        when(usersRepository.findByRefreshToken(TokenHashUtil.sha256("ghost-token"))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usersService.reissueToken("ghost-token"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -201,9 +204,9 @@ class UsersServiceTest {
     @DisplayName("만료된 RefreshToken — IllegalArgumentException 발생")
     void t11() {
         Users user = new Users("testuser", "encoded", "닉네임");
-        user.updateRefreshToken("expired-token", LocalDateTime.now().minusSeconds(1));
+        user.updateRefreshToken(TokenHashUtil.sha256("expired-token"), LocalDateTime.now().minusSeconds(1));
 
-        when(usersRepository.findByRefreshToken("expired-token")).thenReturn(Optional.of(user));
+        when(usersRepository.findByRefreshToken(TokenHashUtil.sha256("expired-token"))).thenReturn(Optional.of(user));
 
         assertThatThrownBy(() -> usersService.reissueToken("expired-token"))
                 .isInstanceOf(IllegalArgumentException.class)

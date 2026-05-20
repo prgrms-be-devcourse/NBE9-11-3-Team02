@@ -1,13 +1,13 @@
 package com.back.together02be.users.controller;
 
 import com.back.together02be.global.apiRes.ApiRes;
+import com.back.together02be.global.security.RefreshTokenCookieManager;
 import com.back.together02be.users.dto.request.LoginReq;
 import com.back.together02be.users.dto.request.SignupReq;
 import com.back.together02be.users.dto.response.UsersRes;
 import com.back.together02be.users.service.UsersService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 public class UsersController {
 
     private final UsersService usersService;
+    private final RefreshTokenCookieManager refreshTokenCookieManager;
 
     @PostMapping("/signup")
     @Operation(summary = "회원 가입")
@@ -39,7 +40,7 @@ public class UsersController {
     public ResponseEntity<ApiRes<UsersRes>> login(@RequestBody @Valid LoginReq req, HttpServletResponse response) {
 
         String[] tokens = usersService.login(req);
-        addRefreshTokenCookie(response, tokens[1]);
+        refreshTokenCookieManager.addRefreshTokenCookie(response, tokens[1]);
         return ResponseEntity.ok(
                 new ApiRes<>("로그인 성공", new UsersRes(tokens[0]))
         );
@@ -48,11 +49,11 @@ public class UsersController {
     @PostMapping("/token")
     @Operation(summary = "토큰 재발급")
     public ResponseEntity<ApiRes<UsersRes>> reissueToken(
-            @CookieValue(name = "refreshToken") String refreshToken,
+            @CookieValue(name = RefreshTokenCookieManager.COOKIE_NAME) String refreshToken,
             HttpServletResponse response
     ) {
         String[] tokens = usersService.reissueToken(refreshToken);
-        addRefreshTokenCookie(response, tokens[1]);
+        refreshTokenCookieManager.addRefreshTokenCookie(response, tokens[1]);
         return ResponseEntity.ok(
                 new ApiRes<>("토큰 재발급 성공", new UsersRes(tokens[0]))
         );
@@ -61,32 +62,13 @@ public class UsersController {
     @PostMapping("/logout")
     @Operation(summary = "로그아웃")
     public ResponseEntity<ApiRes<Void>> logout(
-            @CookieValue(name = "refreshToken") String refreshToken,
+            @CookieValue(name = RefreshTokenCookieManager.COOKIE_NAME) String refreshToken,
             HttpServletResponse response
     ) {
         usersService.logout(refreshToken);
-        deleteRefreshTokenCookie(response);
+        refreshTokenCookieManager.deleteRefreshTokenCookie(response);
         return ResponseEntity.ok(
                 new ApiRes<>("로그아웃 성공", null)
         );
-    }
-
-    private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setDomain("localhost");
-        cookie.setSecure(true);
-        cookie.setAttribute("SameSite", "Strict");
-        response.addCookie(cookie);
-    }
-
-    private void deleteRefreshTokenCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie("refreshToken", "");
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setDomain("localhost");
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);
     }
 }

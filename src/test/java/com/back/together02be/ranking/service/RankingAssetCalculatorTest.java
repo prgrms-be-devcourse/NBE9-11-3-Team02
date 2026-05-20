@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,14 +67,16 @@ class RankingAssetCalculatorTest {
         Stock stock = new Stock("005930", "삼성전자", StockMarket.KOSPI);
         UserStock userStock = new UserStock(user, stock, 10L, 60_000L);
 
-        given(userStockRepository.findAllByUsersId(1L)).willReturn(List.of(userStock));
+        given(userStockRepository.findAll()).willReturn(List.of(userStock));
+
         given(realTimeStockPriceStore.get("005930")).willReturn(
                 RealtimeStockPrice.builder().price("70000").build() // 실시간가 7만 (총 70만)
         );
 
-        // when
-        long totalAsset = rankingAssetCalculator.calculateTotalAsset(account);
+        Map<Long, Long> totalAssetMap = rankingAssetCalculator.calculateAllUsersTotalAsset(java.util.List.of(account));
 
+        // when
+        long totalAsset = totalAssetMap.getOrDefault(account.getUsers().getId(), 0L);
         // then
         assertThat(totalAsset).isEqualTo(1_700_000L); // 100만 + 70만
     }

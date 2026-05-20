@@ -23,8 +23,8 @@ public class KisWebSocketHandler {
 	private final RealTimeStockPriceStore rtStockPriceStore;
 	private final ObjectMapper objectMapper;
 
-	private String approvalKey;
-	private WebSocket conn;
+	private volatile   String approvalKey;
+	private volatile WebSocket conn;
 
 	private final Set<String> subscribedStocks = ConcurrentHashMap.newKeySet();
 
@@ -38,7 +38,6 @@ public class KisWebSocketHandler {
 	}
 
 	public void subscribe(String stockCode) {
-
 		if (!subscribedStocks.add(stockCode)) { // 중복 종목 구독 방지
 			log.info("이미 구독 중: {}", stockCode);
 			return;
@@ -65,23 +64,51 @@ public class KisWebSocketHandler {
 		log.info("구독 시작: {}", stockCode);
 	}
 
+	public void resubscribeAll() {
+		if (subscribedStocks.isEmpty()) {
+			return; // 첫 연결 시 no-op 작동 x
+		}
+		log.info("재구독 시작 - {}개 종목", subscribedStocks.size());
+		for (String stockCode : subscribedStocks) {
+			String message = """
+				{
+				  "header": {
+				    "approval_key": "%s",
+				    "custtype": "P",
+				    "tr_type": "1",
+				    "content-type": "utf-8"
+				  },
+				  "body": {
+				    "input": {
+				      "tr_id": "%s",
+				      "tr_key": "%s"
+				    }
+				  }
+				}
+				""".formatted(approvalKey, KisConstants.TR_REALTIME_PRICE, stockCode);
+
+			conn.send(message);
+			log.info("재구독: {}", stockCode);
+		}
+	}
+
 	public void unsubscribe(String stockCode) {
 		String message = """
-        {
-          "header": {
-            "approval_key": "%s",
-            "custtype": "P",
-            "tr_type": "2",
-            "content-type": "utf-8"
-          },
-          "body": {
-            "input": {
-              "tr_id": "%s",
-              "tr_key": "%s"
-            }
-          }
-        }
-        """.formatted(approvalKey, KisConstants.TR_REALTIME_PRICE, stockCode);
+			{
+			  "header": {
+			    "approval_key": "%s",
+			    "custtype": "P",
+			    "tr_type": "2",
+			    "content-type": "utf-8"
+			  },
+			  "body": {
+			    "input": {
+			      "tr_id": "%s",
+			      "tr_key": "%s"
+			    }
+			  }
+			}
+			""".formatted(approvalKey, KisConstants.TR_REALTIME_PRICE, stockCode);
 
 		conn.send(message);
 		log.info("구독 취소: {}", stockCode);
