@@ -1,0 +1,41 @@
+# ============================================================
+#  application-loadtest.yml  —  k6 부하 테스트 공통 설정
+#
+#  실행 예시:
+#    캐시 ON  → ./gradlew bootRun --args='--spring.profiles.active=loadtest,loadtest-cache-on'
+#    캐시 OFF → ./gradlew bootRun --args='--spring.profiles.active=loadtest,loadtest-cache-off'
+# ============================================================
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/${mysql.database}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+    username: ${mysql.user}
+    password: ${mysql.password}
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # 스키마 보존
+    show-sql: false
+
+# KIS Stub 지연 설정
+app:
+  loadtest:
+    kis:
+      latency-ms: 200         # 평균 외부 API 지연 (ms)
+      latency-jitter-ms: 50   # ± 편차 (ms)
+
+# Actuator 노출 — 캐시 통계 확인용
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,caches,metrics
+  endpoint:
+    caches:
+      enabled: true
+
+logging:
+  level:
+    com.back.together02be: INFO
+    org.springframework.cache: DEBUG   # 캐시 hit/miss 로그 확인

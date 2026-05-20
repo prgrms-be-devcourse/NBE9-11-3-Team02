@@ -50,3 +50,6 @@ application-secret.yml
 # Mysql
 .env
 .env.*
+
+# loadtest
+loadtest/results/
